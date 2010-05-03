@@ -50,11 +50,12 @@
 (defun run-gp-type (type)
   "Return the appropriate generational model to launch gp."
   (case type
-    (:generational #'run-single-gp)
+    (:generational #'run-generational)
     (:steady-state #'run-steady-state)
     (otherwise (error "Invalid generational model for GP engine."))))
 
-(defun run-single-gp (parameters output streams)
+
+(defun run-generational (parameters output streams)
   "Main gp loop."
   (let* ((total-generations (gp-params-total-generations parameters))
 	 (pop-size (gp-params-pop-size parameters))
@@ -138,5 +139,4 @@
 	    (output-generation generation population pop-size best 
 			       run-best new-best-p output streams))
        finally (return run-best))))
-
 
