@@ -1,8 +1,8 @@
 ;;;;
-;;;; mini-gp example: sin function example (see tinygp code for more info)
+;;;; core-gp example: sin function example (see tinygp code for more info)
 ;;;;
 
-(use-package :core-gp)
+(in-package #:core-gp-examples)
 
 ;;;
 ;;; function and terminal sets
@@ -17,15 +17,15 @@
   #'(lambda ()
       (+ min (random (float (1+ (- max min)))))))
 
-(setf mini-gp:*generate-constant* (real-constants -5 5))
+(setf core-gp:*generate-constant* (real-constants -5 5))
 
-(defparameter *fset* (mini-gp:make-fset 'mini-gp:gp-plus 2
-					'mini-gp:gp-minus 2 
-					'mini-gp:gp-times 2
-					'mini-gp:gp-divison 2
+(defparameter *fset* (core-gp:make-fset 'core-gp:gp-plus 2
+					'core-gp:gp-minus 2 
+					'core-gp:gp-times 2
+					'core-gp:gp-divison 2
 					))
 
-(defparameter *tset* '(mini-gp:gp-constant var-x))
+(defparameter *tset* '(core-gp:gp-constant var-x))
 
 
 ;;;
@@ -103,7 +103,7 @@
       (declare (ignore id generation))
       (loop for i from 0 below fitness-cases
 	 do (setf *X* (aref data-points i 0))
-	 sum (expt (- (eval (mini-gp:individual-tree individual)) 
+	 sum (expt (- (eval (core-gp:individual-tree individual)) 
 		      (aref data-points i 1)) 2))))
 
 (defun make-compiled-fitness-sin (fitness-cases data-points)
@@ -111,7 +111,7 @@
       (declare (ignore id generation))
       (loop with prog = (compile nil 
 				 `(lambda () 
-				    ,(mini-gp:individual-tree individual))) 
+				    ,(core-gp:individual-tree individual))) 
 	 for i from 0 below fitness-cases
 	 do (setf *X* (aref data-points i 0))
 	 sum (expt (- (funcall prog) 
@@ -123,7 +123,7 @@
 ;;;
 
 
-(defparameter *sin-params* (mini-gp:make-gp-params :total-generations 5
+(defparameter *sin-params* (core-gp:make-gp-params :total-generations 5
 						   :pop-size 10000
 						   :initial-depth 5
 						   :max-depth 15
@@ -136,7 +136,7 @@
 						   ))
 
 (defun gp-sin (&key (params *sin-params*) (runs 1) (output :screen)) 
-  (mini-gp:launch-gp *fset* *tset* :params params :runs runs :output output)) 
+  (core-gp:launch-gp *fset* *tset* :params params :runs runs :output output)) 
 		 
 
 

@@ -9,4 +9,5 @@
   :author "Jorge Tavares <jorge.tavares@ieee.org>"  
   :licence "MIT"  
   :components ((:file "src/package")
-               (:file "src/core")))
+	       (:file "src/sets" :depends-on ("src/package"))
+               (:file "src/core" :depends-on ("src/package" "src/sets"))))

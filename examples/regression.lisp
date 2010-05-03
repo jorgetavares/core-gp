@@ -2,7 +2,7 @@
 ;;;; core-gp example: symbolic regression
 ;;;;
 
-(use-package :core-gp)
+(in-package #:core-gp-examples)
 
 
 ;;;
