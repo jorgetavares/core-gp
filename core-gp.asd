@@ -16,6 +16,8 @@
 	       (:file "src/selection"  :depends-on ("src/package"))
 	       (:file "src/crossover"  :depends-on ("src/package"))
 	       (:file "src/mutation"   :depends-on ("src/package" "src/sets"))
+	       (:file "src/utilities"  :depends-on ("src/package" "src/individual"))
+	       (:file "src/output"     :depends-on ("src/package" "src/individual" "src/utilities"))
 	       (:file "src/core"       :depends-on ("src/package" 
 						    "src/sets" 
 						    "src/tree" 
@@ -23,4 +25,6 @@
 						    "src/evaluation"
 						    "src/selection"
 						    "src/crossover"
-						    "src/mutation"))))
+						    "src/mutation"
+						    "src/utilities"
+						    "src/output"))))

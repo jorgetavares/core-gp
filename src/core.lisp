@@ -19,26 +19,7 @@
   (type :generational)
   )
 
-(defun launch-gp (fset tset &key (id "gp") (runs 1) (output :screen) 
-		  (generations 10) (pop-size 10) (initial-depth 2) 
-		  (max-depth 5) (elitism t)
-		  (fitness-function nil) (params nil) (type :generational)) 
-  "Start GP."
-  (let* ((fitness fitness-function)
-	 (gp-params (if params params
-			(make-gp-params :total-generations generations
-					:pop-size pop-size
-					:initial-depth initial-depth
-					:max-depth max-depth
-					:fset fset
-					:tset tset
-					:fitness fitness
-					:elitism elitism
-					:type type))))
-    (gp-multiple-runs gp-params :runs runs :output output :id id 
-		      :type (gp-params-type gp-params))))
-
-(defun launch-gp2 (run fset tset &key (id "gp") (output :screen) 
+(defun launch-gp (run fset tset &key (id "gp") (output :screen) 
 		  (generations 10) (pop-size 10) (initial-depth 2) 
 		  (max-depth 5) (elitism t)
 		  (fitness-function nil) (params nil) (type :generational)) 
@@ -55,12 +36,6 @@
 					:elitism elitism
 					:type type))))
     (config-gp-output gp-params output run id (gp-params-type gp-params))))
-
-(defun gp-multiple-runs (parameters &key (runs 1) (output :screen) (id "gp") (type :generational))
-  "Run the gp engine for several runs."
-  (loop for run from 1 to runs
-     do (format t "GP run ~a~%" run)
-     collect (time (config-gp-output parameters output run id type))))
 
 (defun config-gp-output (parameters output run id type)
   "Config a GP run output (:none, :screen, :files, or both)."
@@ -136,7 +111,6 @@
     (setf best (copy-individual (aref population (find-best population pop-size #'<))))
     (setf run-best (copy-individual best))
     (output-generation 1 population pop-size best run-best new-best-p output streams)
-    ;(dump-trees run-best population pop-size 1 3)
     (loop for generation from 2 to total-generations
        do (progn
 	    (setf new-best-p nil)
@@ -161,39 +135,8 @@
 	    (when (< (individual-fitness best) (individual-fitness run-best))
 	      (setf run-best (copy-individual best))
 	      (setf new-best-p t))
-	    ;(when (member generation '(5 10 20 25))
-	    ;  (dump-trees run-best population pop-size generation 3))
 	    (output-generation generation population pop-size best 
 			       run-best new-best-p output streams))
        finally (return run-best))))
 
-(defun dump-trees (best population pop-size generation n-random)
-  (with-open-file (out-dump (concatenate 'string "dump-trees-" 
-					 (format nil "~D" generation)
-					 ".txt")
-			    :direction :output :if-exists :supersede)
-    (format out-dump "~a~%~%" best)
-    (loop for i from 1 to n-random
-       do (format out-dump "~a~%" (aref population (random pop-size))))))
-
-
-(defun output-generation (generation population pop-size best run-best 
-			  new-best-p output streams)
-  "Shows the state of a generation"
-  (unless (eql output :none)
-    (let ((best-fitness (float (individual-fitness best)))
-	  (avg (float (average population pop-size))))
-      (when (member output '(:screen :screen+files))
-	(format t "~a ~a ~a ~%" generation best-fitness avg))
-      (when (member output '(:files :screen+files))
-	(format (first streams) "~a ~a ~a ~%" generation best-fitness avg)
-	(when new-best-p
-	  (format (second streams) "~a ~%" (list generation run-best)))))))
-  
-
-(defun average (population pop-size)
-  "Average of population's fitness."
-  (loop for individual across population
-     sum (individual-fitness individual) into total
-     finally (return (/ total pop-size))))
 

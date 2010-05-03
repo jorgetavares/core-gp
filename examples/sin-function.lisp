@@ -136,7 +136,8 @@
 						   ))
 
 (defun gp-sin (&key (params *sin-params*) (runs 1) (output :screen)) 
-  (core-gp:launch-gp *fset* *tset* :params params :runs runs :output output)) 
+  (loop for run from 1 to runs
+     collect (core-gp:launch-gp run *fset* *tset* :params params :output output))) 
 		 
 
 
