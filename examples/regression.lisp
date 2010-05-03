@@ -51,7 +51,7 @@
 
 
 (defparameter *regression-params* (core-gp:make-gp-params :total-generations 10
-							  :pop-size 500
+							  :pop-size 1000
 							  :initial-depth 1
 							  :max-depth 4
 							  :fset *fset*
