@@ -4,15 +4,17 @@
 ;;; function and terminal set definition/creation
 ;;;
 
-(defmacro defnode (node-name (&rest args) string &body code)
+(defmacro defnode (node-name ((&rest args) (&key (string "") (ephemeral nil))) &body code)
   "Define a function/terminal node for a set."
   `(progn
      (defun ,node-name ,args
        ,@code)
      (defclass ,node-name ()
-       ((operator :initform ',node-name    :reader operator)
-	(arity    :initform ,(length args) :reader arity)
-	(string   :initform ,string        :reader string-form)))))
+       ((operator :initform ',node-name :reader operator)
+	,(if (zerop (length `,args))
+	     `(ephemeral :initform ,ephemeral :reader ephemeral)
+	     `(arity     :initform ,(length `,args) :reader arity))
+	(string   :initform ,string :reader string-form)))))
 
 (defun make-set (node-names)
   "Return a list of object nodes that compose the functino/terminal set."
@@ -28,88 +30,89 @@
      finally (return arity-table)))
 
 
-;;;
-;;; function and terminal sets lists to be used for evolution
-;;;
+
+;;;;
+;;;; function and terminal sets lists to be used for evolution
+;;;;
 
 ;;;
 ;;; function set definitions
 ;;;
 
 ;; math
-(defun gp-plus (a b)
+(defnode gp-plus ((a b) (:string "+"))
   (when (and (numberp a) (numberp b))
     (+ a b)))
 
-(defun gp-minus (a b)
+(defnode gp-minus ((a b) (:string "-"))
   (when (and (numberp a) (numberp b))
     (- a b)))
 
-(defun gp-times (a b)
+(defnode gp-times ((a b) (:string "*"))
   (when (and (numberp a) (numberp b))
     (* a b)))
 
-(defun gp-divison (a b)
+(defnode gp-divison ((a b) (:string "/"))
   (when (and (numberp a) (numberp b))
     (if (> b 0)
 	(/ a b) b)))
 
-(defun gp-log (a)
+(defnode gp-log ((a) ((:string "log"))
   (when (numberp a)
     (log a)))	     
 
-(defun gp-square-root (a)
+(defnode gp-square-root ((a) (:string "sqrt"))
   (when (numberp a)
     (sqrt a)))
 
-(defun gp-square (a)
+(defnode gp-square ((a) (:string "sqr"))
   (when (numberp a)
     (* a a)))	
      
-(defun gp-power (a b)
+(defnode gp-power ((a b) (:string "pow"))
   (when (and (numberp a) (numberp b))
     (expt a b)))
 
 ;; conditionals
-(defun gp-if (x y z)
+(defnode gp-if ((x y z) (:string "if"))
   (if x y z))
 
-(defun gp-and (x y)
+(defnode gp-and ((x y) (:string "and"))
   (and x y))
 
-(defun gp-or (x y)
+(defnode gp-or ((x y) (:string "or"))
   (or x y))
 
-(defun gp-not (x)
+(defnode gp-not ((x) (:string "not"))
   (not x))
 
 ;; comparators
-(defun gp-< (x y)
+(defnode gp-< ((x y) (:string "<"))
   (and (numberp x) (numberp y)
        (< x y)))
 
-(defun gp-<= (x y)
+(defnode gp-<= ((x y) (:string "<="))
   (and (numberp x) (numberp y)
        (<= x y)))
 
-(defun gp-> (x y)
+(defnode gp-> ((x y) (:string ">"))
   (and (numberp x) (numberp y)
        (> x y)))
 
-(defun gp->= (x y)
+(defnode gp->= ((x y) (:string ">="))
   (and (numberp x) (numberp y)
        (>= x y)))
 
-(defun gp-= (x y)
+(defnode gp-= ((x y) (:string "="))
   (and (numberp x) (numberp y)
        (= x y)))
 
-(defun gp-/= (x y)
+(defnode gp-/= ((x y) (:string "/="))
   (and (numberp x) (numberp y)
        (/= x y)))
 
 ;; others
-(defun gp-random-n (n)
+(defnode gp-random-n ((n) (:string "random-n"))
   (when (numberp n)
     (random n)))
 
@@ -122,27 +125,22 @@
 
 (defparameter *generate-constant* nil)
 
-(defun gp-constant ()
+(defnode gp-constant (() (:string "integer" :ephemeral t))
   (funcall *generate-constant*))
 
-(defun gp-constant-int (&optional (max 100))
-  (random max))
-
-(defun gp-constant-real ()
+(defnode gp-constant-real (() (:string "real" :ephemeral t))
   (random 1.0))
 
-(defun gp-true ()
-  t)
+(defnode gp-true (() (:string "true" :ephemeral t)) t)
 
-(defun gp-false ()
-  nil)
+(defnode gp-false (() (:string "false" :ephemeral t)) nil)
 
 ;; random numbers
-(defun gp-random-real ()
+(defnode gp-random-real (() (:string "random-real" :ephemeral t))
   (random 1.0))
 
-(defun gp-random-10 ()
+(defnode gp-random-10 (() (:string "random-10" :ephemeral t))
   (random 10))
 
-(defun gp-random-100 ()
+(defnode gp-random-100 (() (:string "random-100" :ephemeral t))
   (random 100))
