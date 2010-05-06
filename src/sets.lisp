@@ -1,6 +1,34 @@
 (in-package #:core-gp)
 
 ;;;
+;;; function and terminal set definition/creation
+;;;
+
+(defmacro defnode (node-name (&rest args) string &body code)
+  "Define a function/terminal node for a set."
+  `(progn
+     (defun ,node-name ,args
+       ,@code)
+     (defclass ,node-name ()
+       ((operator :initform ',node-name    :reader operator)
+	(arity    :initform ,(length args) :reader arity)
+	(string   :initform ,string        :reader string-form)))))
+
+(defun make-set (node-names)
+  "Return a list of object nodes that compose the functino/terminal set."
+  (mapcar #'make-instance node-names))
+
+(defun process-fset-arity (fset)
+  "Group the functions of the set according to the arity."
+  (loop with arity-table = (make-hash-table) 
+     for node in fset
+     do (let ((nodes (gethash (arity node) arity-table)))
+	  (setf (gethash (arity node) arity-table) 
+		(push node nodes)))
+     finally (return arity-table)))
+
+
+;;;
 ;;; function and terminal sets lists to be used for evolution
 ;;;
 
