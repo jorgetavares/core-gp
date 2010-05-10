@@ -1,17 +1,23 @@
 (in-package #:core-gp)
 
 ;;;
-;;; tree generators and related functions
+;;; tree utilities
 ;;;
 
-(defun make-random-tree (max-size fset fset-size tset tset-size
-			 &key (method :ramped) (user nil))
-  "Return a random tree according to given method to a given size."
-  (case method
-    (:full (full-method-depth 0 max-size fset fset-size tset tset-size ))
-    (:grow (grow-method-depth 0 max-size fset fset-size tset tset-size ))
-    (:ramped (ramped-half-and-half 0 max-size fset fset-size tset tset-size))
-    (otherwise (funcall user 0 max-size fset fset-size tset tset-size))))
+(defun count-tree-nodes (tree)
+  "Count the number of nodes in a tree."
+  (if (consp tree)
+      (1+ (reduce #'+ (mapcar #'count-tree-nodes (rest tree)))) 1))
+  
+(defun max-tree-depth (tree)
+ "Return the max depth of a tree."
+ (if (consp tree)
+     (1+ (if (rest tree)
+	     (apply #'max (mapcar #'max-tree-depth (rest tree))) 0)) 1))
+
+;;;
+;;; tree generators and related functions
+;;;
 
 (defun ramped-half-and-half (size limit fset fset-size tset tset-size)
   "A gp tree is created with half of probability for each method."

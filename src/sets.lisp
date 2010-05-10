@@ -30,7 +30,6 @@
      finally (return arity-table)))
 
 
-
 ;;;;
 ;;;; function and terminal sets lists to be used for evolution
 ;;;;
@@ -57,9 +56,9 @@
     (if (> b 0)
 	(/ a b) b)))
 
-(defnode gp-log ((a) ((:string "log"))
+(defnode gp-log ((a) (:string "log"))
   (when (numberp a)
-    (log a)))	     
+    (log a))) 
 
 (defnode gp-square-root ((a) (:string "sqrt"))
   (when (numberp a)
@@ -123,10 +122,19 @@
 
 ;; constants (only used in a tree generation by keeping their values)
 
+
+;; allows a user-defined function to generate constants
+;; - store fucntion in *generate-constant*
+;; - just add to tset gp-constant
+
 (defparameter *generate-constant* nil)
 
-(defnode gp-constant (() (:string "integer" :ephemeral t))
+(defnode gp-constant (() (:string "constant" :ephemeral t))
   (funcall *generate-constant*))
+
+;; specific constant generators (ephemeral constants)
+(defnode gp-constant-int (() (:string "int" :ephemeral t))
+  (random 10))
 
 (defnode gp-constant-real (() (:string "real" :ephemeral t))
   (random 1.0))
@@ -136,11 +144,11 @@
 (defnode gp-false (() (:string "false" :ephemeral t)) nil)
 
 ;; random numbers
-(defnode gp-random-real (() (:string "random-real" :ephemeral t))
+(defnode gp-random-real (() (:string "random-real" :ephemeral nil))
   (random 1.0))
 
-(defnode gp-random-10 (() (:string "random-10" :ephemeral t))
+(defnode gp-random-10 (() (:string "random-10" :ephemeral nil))
   (random 10))
 
-(defnode gp-random-100 (() (:string "random-100" :ephemeral t))
+(defnode gp-random-100 (() (:string "random-100" :ephemeral nil))
   (random 100))

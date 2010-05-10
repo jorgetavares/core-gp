@@ -129,7 +129,7 @@
 						   :max-depth 15
 						   :fset *fset*
 						   :tset *tset*
-						   :fitness (make-compiled-fitness-sin
+						   :fitness (make-fitness-sin
 							     63 *data-points*)
 						   :elitism t
 						   :type :generational

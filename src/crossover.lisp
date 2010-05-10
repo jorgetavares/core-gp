@@ -63,14 +63,4 @@
      (if (or (= 1 p2-limit) (> p2-limit depth))
          p2 (first o2)))))
 
-(defun count-tree-nodes (tree)
-  "Count the number of nodes in a tree."
-  (if (consp tree)
-      (+ 1 (reduce #'+ (mapcar #'count-tree-nodes (rest tree)))) 1))
-  
-(defun tree-depth (tree)
- "Return the max depth of a tree."
- (if (consp tree)
-     (+ 1 (if (rest tree)
-	      (apply #'max (mapcar #'tree-depth (rest tree))) 0)) 1))
 
