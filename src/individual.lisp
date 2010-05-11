@@ -19,7 +19,7 @@
     :accessor genome
     :documentation "Individual's genome (tree, permutation, etc).")
    (fitness
-    :initarg :fitness :initform 0
+    :initarg :fitness :initform (make-fitness)
     :accessor fitness
     :documentation "Individual's fitness value.")
    (eval-p
@@ -70,7 +70,6 @@
   (:documentation "Generate a random genome of given type and size."))
     
 (defmethod make-random-genome ((new-genome tree-genome) size &rest args)
-  "Return a random tree individual for the given sets and tree builder."
   (destructuring-bind (builder fset fset-size tset tset-size) args
     (let ((tree (funcall builder 0 size fset fset-size tset tset-size)))
       (setf (chromossome new-genome) tree
@@ -79,7 +78,6 @@
       new-genome)))
 
 (defmethod make-random-genome ((new-genome bit-genome) size &rest args)
-  "Return a random binary genome."
   (declare (ignore args))
   (setf (chromossome new-genome)
 	(make-array size 
