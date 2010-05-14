@@ -10,21 +10,18 @@
 ;;;
 
 (defparameter *X* 0)
-
-(defun var-x () 
-  *X*)
+(defnode var-x (() (:string "X" :ephemeral nil)) *X*)
 
 (defun int-constants (min max)
   #'(lambda ()
       (+ min (random (1+ (- max min))))))
-
 (setf core-gp:*generate-constant* (int-constants -5 5))
 
-(defparameter *fset* (core-gp:make-fset 'core-gp:gp-plus 2
-					'core-gp:gp-minus 2 
-					'core-gp:gp-times 2
-					'core-gp:gp-divison 2
-					))
+(defparameter *fset* (core-gp:make-set 'core-gp:gp-plus
+				       'core-gp:gp-minus 
+				       'core-gp:gp-times
+				       'core-gp:gp-divison
+				       ))
 
 (defparameter *tset* '(core-gp:gp-constant var-x))
 
@@ -33,15 +30,18 @@
 ;;; fitness function ( y = f(x) = x^2 / 2 )
 ;;;
 
-(defparameter *x-points* (loop for i from 0 below 10 collect (/ i 10)))
-(defparameter *y-points* (loop for x in *x-points* collect (float (/ (expt x 2) 2))))
+(defparameter *fitness-cases* 10)
+
+(defparameter *x-points* (loop for i from 0 below *fitness-cases* 
+			    collect (/ i *fitness-cases*)))
+(defparameter *y-points* (loop for x in *x-points* 
+			    collect (float (/ (expt x 2) 2))))
 
 (defun make-fitness-regression (fitness-cases x-points y-points)
-  #'(lambda (individual id generation)
-      (declare (ignore id generation))
+  #'(lambda (candidate-solution)
       (loop for i from 0 below fitness-cases
 	 do (setf *X* (nth i x-points))
-	 sum (expt (- (eval (core-gp:individual-tree individual)) 
+	 sum (expt (- (eval candidate-solution) 
 		      (nth i y-points)) 2))))
 
 
@@ -57,7 +57,8 @@
 							  :fset *fset*
 							  :tset *tset*
 							  :fitness (make-fitness-regression 
-								    10 *x-points* *y-points*)
+								    *fitness-cases* 
+								    *x-points* *y-points*)
 							  :elitism nil
 							  :type :steady-state
 							  ))

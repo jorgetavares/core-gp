@@ -1,4 +1,4 @@
-(in-package #:core-gp)
+;(in-package #:core-gp)
 
 ;;;
 ;;; classes
@@ -16,10 +16,11 @@
     :accessor fitness-score
     :documentation "Scaled value of raw-score.")))
 
-(defmethod initializa-instance :after ((fitness fitness) &key scaling-function)
-  (when scaling-function
-    (setf (slot-value fitness 'fitness-score)
-	  (funcall scaling-function (slot-value 'fitness raw-score)))))
+(defmethod initialize-instance :after ((fitness fitness) &key scaling-function)
+  (if scaling-function
+      (setf (slot-value fitness 'fitness-score)
+	    (funcall scaling-function (slot-value fitness 'raw-score)))
+      nil))
 
 (defun make-fitness (&key raw-score scaling-function)
   "Create an empty of filled fitness."
@@ -38,15 +39,15 @@
   ((evaluation-function 
     :initarg :evaluation-function 
     :initform (error "Class evaluation-config: must provide an evaluation function.")
-    :reader :evaluation-function
+    :reader evaluation-function
     :documentation "Evaluation function (required).")
    (scaling-function 
     :initarg :scaling-function :initform nil
     :reader scaling-function
-    :documentayion "Scaling function (optional).")
+    :documentation "Scaling function (optional).")
    (scaling-p 
     :reader scaling-p
-    :dcoumentation "Indicates if scaling is set.")))
+    :documentation "Indicates if scaling is set.")))
 
 (defmethod initialize-instance :after ((config evaluation-config) &key)
   (if (slot-value config 'scaling-function)

@@ -1,4 +1,4 @@
-(in-package #:core-gp)
+;(in-package #:core-gp)
 
 ;;;
 ;;; function and terminal set definition/creation
@@ -51,7 +51,7 @@
   (when (and (numberp a) (numberp b))
     (* a b)))
 
-(defnode gp-divison ((a b) (:string "/"))
+(defnode gp-division ((a b) (:string "/"))
   (when (and (numberp a) (numberp b))
     (if (> b 0)
 	(/ a b) b)))

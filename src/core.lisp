@@ -97,7 +97,7 @@
   (let* ((total-generations (gp-params-total-generations parameters))
 	 (pop-size (gp-params-pop-size parameters))
 	 (initial-depth (gp-params-initial-depth parameters))
-	 (max-depth (gp-params-max-depth parameters))
+                             	 (max-depth (gp-params-max-depth parameters))
 	 (fset (gp-params-fset parameters))
 	 (tset (gp-params-tset parameters))
 	 (tset-size (length tset))
