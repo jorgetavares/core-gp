@@ -1,12 +1,13 @@
-(in-package #:core-gp)
+;(in-package #:core-gp)
 
 ;;;
 ;;; subtree crossover
 ;;;
 
-(defun apply-crossover (population size max-depth rate)
+(defun apply-crossover (pop max-depth rate)
   "Apply tree crossover to the population."
-  (loop for position from 0 below size by 2
+  (loop with population = (individuals pop) 
+     for position from 0 below (size pop) by 2
      do (when (< (random 1.0) rate)
 	  (multiple-value-bind (o1 o2)
 	      (tree-crossover max-depth 
@@ -17,9 +18,24 @@
 
 (defun tree-crossover (size p1 p2)
   (multiple-value-bind (o1 o2)
-      (cross-subtrees (individual-tree p1) (individual-tree p2) size)
-    (values (make-individual :tree (copy-tree o1) :eval-p t)
-	    (make-individual :tree (copy-tree o2) :eval-p t))))
+      (cross-subtrees (chromossome (genome p1)) 
+		      (chromossome (genome p2)) size)
+    (values (make-instance 
+	     'individual 
+	     :id (generate-id)
+	     :genome (make-instance 
+		      'tree-genome
+		      :chromossome (copy-tree o1)
+		      :tree-depth (max-tree-depth o1)
+		      :nodes-count (count-tree-nodes o1)))
+	    (make-instance 
+	     'individual 
+	     :id (generate-id)
+	     :genome (make-instance 
+		      'tree-genome
+		      :chromossome (copy-tree o2)
+		      :tree-depth (max-tree-depth o2)
+		      :nodes-count (count-tree-nodes o2))))))
 
 (defun cross-subtrees (p1 p2 depth)
   "Exchanges two subtrees in a random point."
@@ -55,8 +71,8 @@
 
 (defun validate-crossover (p1 o1 p2 o2 depth)
   "Validates the offspring. If they pass the maximum depth they are rejected."
-  (let ((p1-limit (tree-depth (first o1)))
-        (p2-limit (tree-depth (first o2))))
+  (let ((p1-limit (max-tree-depth (first o1)))
+        (p2-limit (max-tree-depth (first o2))))
     (values
      (if (or (= 1 p1-limit) (> p1-limit depth))
          p1 (first o1))

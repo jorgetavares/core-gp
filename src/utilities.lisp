@@ -4,17 +4,23 @@
 ;;; utilities
 ;;;
 
-(defun dump-trees (best population pop-size generation n-random)
-  (with-open-file (out-dump (concatenate 'string "dump-trees-" 
-					 (format nil "~D" generation)
-					 ".txt")
-			    :direction :output :if-exists :supersede)
-    (format out-dump "~a~%~%" best)
-    (loop for i from 1 to n-random
-       do (format out-dump "~a~%" (aref population (random pop-size))))))
+(defun copy-array (array)
+  (let ((dimensions (array-dimensions array)))
+    (adjust-array
+     (make-array dimensions 
+		 :element-type (array-element-type array) 
+		 :displaced-to array) 
+     dimensions)))
 
-(defun average (population pop-size)
+(defun average-fitness (population)
   "Average of population's fitness."
-  (loop for individual across population
-     sum (individual-fitness individual) into total
-     finally (return (/ total pop-size))))
+  (loop for individual across (individuals population)
+     sum (raw-score (fitness individual)) into avg-raw
+     if (numberp (raw-score (fitness individual))) 
+     sum (raw-score (fitness individual)) into avg-fit
+     else sum 0 into avg-fit
+     finally (return (values 
+		      (/ avg-raw (size population))
+		      (if (> avg-fit 0)
+			  (/ avg-fit (size population))
+			  0)))))

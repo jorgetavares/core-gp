@@ -27,6 +27,41 @@
     :accessor eval-p
     :documentation "Predicate which indicates if individual needs to be evaluated.")))
 
+;;;
+;;; individual methods
+;;;
+
+(defgeneric copy (individual)
+  (:documentation "Return a new identical object to individual but with a different id."))
+
+(defmethod copy ((individual individual))
+  (make-instance 'individual
+		 :id (generate-id)
+		 :genome (copy (genome individual))
+		 :fitness (copy (fitness individual))
+		 :eval-p (eval-p individual)))
+
+(defgeneric clone (individual)
+  (:documentation "Return a new identical object to individual."))
+
+(defmethod clone ((individual individual))
+  (make-instance 'individual
+		 :id (id individual)
+		 :genome (copy (genome individual))
+		 :fitness (copy (fitness individual))
+		 :eval-p (eval-p individual)))
+
+
+;;;
+;;; individual builders
+;;;
+
+(defun make-random-individual (id genome-type size &rest args)
+  "Return a random individual of a specific defined genome."
+  (make-instance 'individual
+		 :id id
+		 :genome (apply #'make-random-genome 
+				(make-empty-genome genome-type) size args)))
 
 ;;;
 ;;; genome definitions
@@ -85,17 +120,29 @@
 		    :initial-contents (loop repeat size collect (random 2)))
 	(size new-genome) size) new-genome)
 
-		   
 ;;;
-;;; individual builders
+;;; methods
 ;;;
 
-(defun make-random-individual (id genome-type size &rest args)
-  "Return a random individual of a specific defined genome."
-  (make-instance 'individual
-		 :id id
-		 :genome (apply #'make-random-genome 
-				(make-empty-genome genome-type) size args)))
+(defgeneric copy (genome)
+  (:documentation "Return a new identical object to genome."))
+
+(defmethod copy ((genome bit-genome))
+  (make-instance 'bit-genome
+		 :chromossome (copy-array (chromossome genome))
+		 :size (size genome)))
+
+(defmethod copy ((genome linear-genome))
+  (make-instance 'linear-genome
+		 :chromossome (copy-array (chromossome genome))
+		 :size (size genome)))
+
+(defmethod copy ((genome tree-genome))
+  (make-instance 'tree-genome
+		 :chromossome (copy-tree (chromossome genome))
+		 :tree-depth (tree-depth genome)
+		 :nodes-count (nodes-count genome)))
+
 
 ;;;
 ;;; population
@@ -111,17 +158,37 @@
     :accessor size
     :documentation "Number of individuals in the population.")))
 
-(defun make-population (&optional individuals)
+;;;
+;;; methods
+;;;
+
+(defgeneric copy (population)
+  (:documentation "Return a new identical population."))
+
+(defmethod copy ((population population))
+  (let* ((size (size population))
+	 (copy (make-array size)))
+    (loop for index from 0 below size
+       do (setf (aref copy index)
+		(copy (aref (individuals population) index)))
+       finally (return (make-instance 'population 
+				      :individuals copy :size size)))))
+
+;;;
+;;; builders
+;;;
+
+(defun make-population (&key individuals size)
   "Return a population instance, empty or filled."
   (make-instance 'population 
 		 :individuals individuals
-		 :size (length individuals)))
+		 :size (if size size (length individuals))))
 
 (defun make-random-population (size genome-type genome-size &rest args)
   (make-population 
    (make-array size
 	       :initial-contents 
-	       (loop for id from 0 below size
+	       (loop repeat size
 		  collect (apply #'make-random-individual
-				 id genome-type genome-size args)))))
+				 (generate-id) genome-type genome-size args)))))
 

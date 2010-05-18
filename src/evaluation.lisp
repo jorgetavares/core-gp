@@ -13,6 +13,7 @@
     :accessor raw-score
     :documentation "Value obtained from the evaluation function.")
    (fitness-score
+    :initarg :fitness-score
     :accessor fitness-score
     :documentation "Scaled value of raw-score.")))
 
@@ -31,6 +32,15 @@
 			  :scaling-function scaling-function)
 	  (make-instance 'fitness :raw-score raw-score))
       (make-instance 'fitness)))
+
+(defgeneric copy (fitness)
+  (:documentation "Return a new identical object to fitness."))
+
+(defmethod copy ((fitness fitness))
+  (make-instance 'fitness 
+		 :raw-score (raw-score fitness)
+		 :fitness-score (fitness-score fitness)))
+
 
 ;;
 ;; evaluation configuration

@@ -14,7 +14,7 @@
 	,(if (zerop (length `,args))
 	     `(ephemeral :initform ,ephemeral :reader ephemeral)
 	     `(arity     :initform ,(length `,args) :reader arity))
-	(string   :initform ,string :reader string-form)))))
+	(string :initform ,string :reader string-form)))))
 
 (defun make-set (node-names)
   "Return a list of object nodes that compose the functino/terminal set."
