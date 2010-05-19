@@ -4,38 +4,64 @@
 ;;; subtree crossover
 ;;;
 
-(defun apply-crossover (pop max-depth rate)
+(defun apply-crossover (pop parameters)
   "Apply tree crossover to the population."
   (loop with population = (individuals pop) 
      for position from 0 below (size pop) by 2
-     do (when (< (random 1.0) rate)
+     do (when (< (random 1.0) (core-parameters-cx-rate parameters))
 	  (multiple-value-bind (o1 o2)
-	      (tree-crossover max-depth 
-			      (aref population position) 
-			      (aref population (1+ position)))
+	      (funcall (core-params-crossover parameters)
+		       (genome (aref population position)) 
+		       (genome (aref population (1+ position))) parameters)
 	    (setf (aref population position) o1 
 		  (aref population (1+ position)) o2)))))
 
-(defun tree-crossover (size p1 p2)
+
+;;;
+;;; GA operators
+;;;
+
+(defmethod one-point-crossover ((genome1 bit-genome) (genome2 bit-genome) parameters)
+  (let ((size (core-params-genome-size parameters)))
+      (multiple-value-bind (o1 o2)
+	  (cross-bit-chromossomes genome1 genome2 size)
+	(values (make-instance
+		 'individual 
+		 :id (generate-id) :genome (make-bit-genome o1 size))
+		(make-instance 
+		 'individual 
+		 :id (generate-id) :genome (make-bit-genome o2 size))))))
+
+(defun cross-bit-chromossomes (c1 c2 size)
+  (let ((cut-point (random size))
+	(o1 (copy-array c1))
+	(o2 (copy-array c2)))
+    (loop for index from cut-point below size
+       do (progn
+	    (setf (aref o1 index) (aref c2 index))
+	    (setf (aref o2 index) (aref c1 index)))
+       finally (return (values o1 o2)))))
+       
+
+;;;
+;;; GP operators
+;;;
+
+(defmethod tree-crossover ((genome1 tree-genome) (genome2 tree-genome) parameters)
   (multiple-value-bind (o1 o2)
-      (cross-subtrees (chromossome (genome p1)) 
-		      (chromossome (genome p2)) size)
+      (cross-subtrees (chromossome p1) 
+		      (chromossome p2) 
+		      (core-params-max-depth parameters))
     (values (make-instance 
 	     'individual 
 	     :id (generate-id)
-	     :genome (make-instance 
-		      'tree-genome
-		      :chromossome (copy-tree o1)
-		      :tree-depth (max-tree-depth o1)
-		      :nodes-count (count-tree-nodes o1)))
+	     :genome (make-tree-genome
+		      (copy-tree o1) (max-tree-depth o1) (count-tree-nodes o1)))
 	    (make-instance 
 	     'individual 
 	     :id (generate-id)
-	     :genome (make-instance 
-		      'tree-genome
-		      :chromossome (copy-tree o2)
-		      :tree-depth (max-tree-depth o2)
-		      :nodes-count (count-tree-nodes o2))))))
+	     :genome (make-tree-genome
+		      (copy-tree o2) (max-tree-depth o2) (count-tree-nodes o2))))))
 
 (defun cross-subtrees (p1 p2 depth)
   "Exchanges two subtrees in a random point."

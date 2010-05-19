@@ -4,20 +4,46 @@
 ;;; point mutation
 ;;;
 
-(defun apply-mutation (population mt-rate node-rate fset tset tset-size arity)
+(defun apply-mutation (population parameters &optional arity)
   "Apply point mutation crossover to the population."
-  (loop for position from 0 below (size population)
-     do (when (< (random 1.0) mt-rate)
-	  (let ((individual (aref (individuals population) position)))
-	    (setf (genome individual)
-		  (point-mutation (genome individual) node-rate fset tset tset-size arity))
-	    (setf (eval-p individual) t)))))
+  (let ((mt-rate (core-params-mt-rate parameters)))
+    (loop for position from 0 below (size population)
+       do (when (< (random 1.0) mt-rate)
+	    (let ((individual (aref (individuals population) position)))
+	      (setf (genome individual)
+		    (funcall (core-params-mutation parameters)
+			     (genome individual) parameters arity))
+	      (setf (eval-p individual) t))))))
+
+
+;;;
+;;; GA operators
+;;;
+
+(defmethod flip-mutation ((genome bit-genome) parameters &optional arity)
+  (declare (ignore arity)) ;; TO BE REMOVED after an FSET/TSET object is created
+  (let ((gene-rate (core-params-node-rate parameters))
+	(chromossome (chromossome genome)))
+    (loop for index from 0 below (size genome)
+       when (< (random 1.0) node-rate)
+       do (let ((gene (aref chromossome index)))
+	    (setf (aref chromossome index)
+		  (if (= gene 1) 0 1))))
+    genome))
+
+
+;;;
+;;; GP operators
+;;;
 	 
-(defmethod point-mutation ((genome tree-genome) node-rate fset tset tset-size arity)
+(defmethod point-mutation ((genome tree-genome) parameters arity)
   "Point mutation: for every node that can be mutated, changes to an equivalent type."
-  (setf (chromossome genome)
-	(point-mutate-tree (chromossome genome) rate fset tset tset-size arity))
-  genome)
+  (let ((node-rate (core-params-node-rate parameters))
+	(fset (core-params-fset parameters))
+	(tset (core-params-tset parameters)))
+    (setf (chromossome genome)
+	  (point-mutate-tree (chromossome genome) rate fset tset (length tset) arity))
+    genome))
 
 (defun point-mutate-tree (tree rate fset tset tset-size arity)
   "Point mutation: for every node that can be mutated, changes to an equivalent type."

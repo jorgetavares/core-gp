@@ -97,10 +97,23 @@
 ;;; genome builders
 ;;;
 
+;;
+;; functions
+
 (defun make-empty-genome (genome-type)
   "Return an empty individual with an empty tree genome."
   (make-instance genome-type))
 
+(defun make-bit-genome (chromossome size)
+  (make-instance 'bit-genome :chromossome chromossome :size size))
+
+(defun make-tree-genome (tree depth nodes-count)
+  (make-instance 'tree-genome 
+		 :chromossome tree :tree-depth depth :nodes-count nodes-count))
+
+;;
+;; methods
+		 
 (defgeneric make-random-genome (new-genome size &rest args)
   (:documentation "Generate a random genome of given type and size."))
     
