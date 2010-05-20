@@ -56,6 +56,30 @@
 		(push node nodes)))
      finally (return arity-table)))
 
+;;
+;; methods
+
+(defmethod random-terminal-node ((container sets-container))
+  (nth (random (slot-value container 'terminals-size))
+       (slot-value container 'terminals)))
+
+(defmethod random-function-node ((container sets-container) &optional arity)
+  (if arity
+      (let ((nodes (gethash arity (slot-value container 'arity-table))))
+	(nth (random (length nodes-size)) nodes))
+      (nth (random (slot-value container 'functions-size))
+	   (slot-value container 'functions))))
+
+(defmethod find-terminal-node (name (container sets-container))
+  (find name (slot-value container 'functions) 
+	:test #'(lambda (element node)
+		  (eql element (operator node)))))
+
+(defmethod find-function-node (name (container sets-container))
+  (find name (slot-value container 'functions) 
+	:test #'(lambda (element node)
+		  (eql element (operator node)))))
+
 
 ;;;
 ;;; function and terminal set definition/creation

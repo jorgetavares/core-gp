@@ -4,7 +4,7 @@
 ;;; point mutation
 ;;;
 
-(defun apply-mutation (population parameters &optional arity)
+(defun apply-mutation (population parameters)
   "Apply point mutation crossover to the population."
   (let ((mt-rate (core-params-mt-rate parameters)))
     (loop for position from 0 below (size population)
@@ -12,7 +12,7 @@
 	    (let ((individual (aref (individuals population) position)))
 	      (setf (genome individual)
 		    (funcall (core-params-mutation parameters)
-			     (genome individual) parameters arity))
+			     (genome individual) parameters))
 	      (setf (eval-p individual) t))))))
 
 
@@ -20,8 +20,7 @@
 ;;; GA operators
 ;;;
 
-(defmethod flip-mutation ((genome bit-genome) parameters &optional arity)
-  (declare (ignore arity)) ;; TO BE REMOVED after an FSET/TSET object is created
+(defmethod flip-mutation ((genome bit-genome) parameters)
   (let ((gene-rate (core-params-node-rate parameters))
 	(chromossome (chromossome genome)))
     (loop for index from 0 below (size genome)
@@ -36,37 +35,32 @@
 ;;; GP operators
 ;;;
 	 
-(defmethod point-mutation ((genome tree-genome) parameters arity)
+(defmethod point-mutation ((genome tree-genome) parameters)
   "Point mutation: for every node that can be mutated, changes to an equivalent type."
-  (let ((node-rate (core-params-node-rate parameters))
-	(fset (core-params-fset parameters))
-	(tset (core-params-tset parameters)))
-    (setf (chromossome genome)
-	  (point-mutate-tree (chromossome genome) rate fset tset (length tset) arity))
-    genome))
+  (setf (chromossome genome)
+	(point-mutate-tree (chromossome genome) 
+			   (core-params-node-rate parameters) 
+			   (core-params-sets parameters)))
+  genome)
 
-(defun point-mutate-tree (tree rate fset tset tset-size arity)
+(defun point-mutate-tree (tree rate sets)
   "Point mutation: for every node that can be mutated, changes to an equivalent type."
   (if (or (not (consp tree))
 	  (null (rest tree)))
-      (mutate-terminal tree rate tset tset-size)
-      (let* ((element (first tree))
-	     (nargs (arity (find element fset #:test #'(lambda (name node)
-							 (eql name (operator node)))))))
-	(cons (mutate-function element nargs rate arity) 
-	      (loop for arg from 1 to nargs
-		 collect (point-mutate-tree (nth arg tree) rate 
-					    fset tset tset-size arity))))))
+      (mutate-terminal tree rate sets)
+      (let* ((node-name (first tree))
+	     (node-arity (arity (find-function-node node-name sets))))
+	(cons (mutate-function node-name node-arity rate sets) 
+	      (loop for arg from 1 to node-arity
+		 collect (point-mutate-tree (nth arg tree) rate sets))))))
 
-(defun mutate-terminal (terminal rate tset tset-size)
+
+(defun mutate-terminal (terminal rate sets)
   (if (< (random 1.0) rate)
-      (process-terminal (nth (random tset-size) tset))
+      (process-terminal (random-terminal-node sets))
       terminal))
 
-(defun mutate-function (function nargs rate arity)
+(defun mutate-function (function arity rate sets)
   (if (< (random 1.0) rate)
-      (let ((same-args (gethash nargs arity)))
-	(operator (nth (random (length same-args)) same-args)))
+      (operator (random-function-node sets arity))
       function))
- 
-

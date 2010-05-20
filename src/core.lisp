@@ -11,8 +11,7 @@
   (genome-size 10)
   (initial-depth 2)
   (max-depth 5)
-  (fset nil)
-  (tset nil)
+  (sets nil)
   (fitness nil)
   (t-size 3)
   (crossover #'tree-crossover)
@@ -62,7 +61,7 @@
 					    :type type))))
     (config-output core-params output id (core-params-type core-params))))
 
-(defun gp (fset tset &key (id "gp") (output :screen) 
+(defun gp (sets &key (id "gp") (output :screen) 
 	   (generations 10) (pop-size 10) (initial-depth 2) 
 	   (max-depth 5) (elitism t) (crossover #'tree-crossover) (mutation #'point-mutation)
 	   (fitness-function nil) (params nil) (type :generational)) 
@@ -73,8 +72,7 @@
 					    :pop-size pop-size
 					    :initial-depth initial-depth
 					    :max-depth max-depth
-					    :fset fset
-					    :tset tset
+					    :sets sets
 					    :fitness fitness
 					    :elitism elitism
 					    :crossover crossover
@@ -105,10 +103,7 @@
 	 (replacement-mode (select-replacement-mode type))
 	 (total-generations (core-params-total-generations parameters))
 	 (initial-depth (core-params-initial-depth parameters))
-	 (fset (core-params-fset parameters))
-	 (tset (core-params-tset parameters))
-	 (tset-size (length tset))
-	 (arity-table (when fset (process-fset-arity fset)))
+	 (sets (core-params-sets parameters))
 	 (fitness (core-params-fitness parameters))
 	 (t-size (core-params-t-size parameters))
 	 (cx-rate (core-params-cx-rate parameters))
@@ -119,7 +114,9 @@
 	 (best nil) (run-best nil) (new-best-p t)
 	 (args (case genome-type
 		 ('tree-genome 
-		  (list initial-depth #'ramped-half-and-half fset (length fset) tset tset-size))
+		  (list initial-depth #'ramped-half-and-half 
+			(functions sets) (functions-size sets)
+			(terminals sets) (terminals-size sets)))
 		 ('bit-genome
 		  (list genome-size))
 		 (otherwise (error "run-core: no valid genome-type."))))
@@ -140,7 +137,7 @@
 	    (setf new-best-p nil)
 	    ;; do a generational or steady-state iteration
 	    (funcall replacement-mode population parameters t-size cx-rate
-		     mt-rate node-rate arity-table config)
+		     mt-rate node-rate config)
 	    (when elitism-p (elitism population best))
 	    ;; get best of the current population
 	    (setf best (copy (aref (individuals population)
@@ -167,15 +164,15 @@
     (:steady-state #'steady-state)
     (otherwise (error "Invalid generational model for core-gp engine."))))
 
-(defun generational (population parameters t-size cx-rate mt-rate node-rate arity-table config)
+(defun generational (population parameters t-size cx-rate mt-rate node-rate config)
   "Generational evolutionary iteration."
   (let ((new-population (selection population t-size #'<)))
     (apply-crossover new-population parameters)
-    (apply-mutation new-population parameters arity-table)
+    (apply-mutation new-population parameters)
     (evaluate-population new-population config)
     (setf population new-population)))
   
-(defun steady-state (population parameters t-size cx-rate mt-rate node-rate arity-table config)
+(defun steady-state (population parameters t-size cx-rate mt-rate node-rate config)
   "Steady state evolutionary iteration."
   (loop for i from 1 to (size population) 
      do (let ((offspring nil))
@@ -189,7 +186,7 @@
 		(setf offspring (tournament t-size population #'<))
 		(setf (genome offspring)
 		      (funcall (core-params-mutation parameters)
-			       offspring parameters arity-table))
+			       offspring parameters))
 		(setf (eval-p offspring) nil)))
 	  (evaluate-individual offspring config)
 	  (setf (aref (individuals population) (index-tournament t-size population #'>))
