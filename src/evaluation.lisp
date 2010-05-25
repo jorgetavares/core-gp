@@ -42,35 +42,6 @@
 		 :fitness-score (fitness-score fitness)))
 
 
-;;
-;; evaluation configuration
-
-(defclass evaluation-config ()
-  ((evaluation-function 
-    :initarg :evaluation-function 
-    :initform (error "Class evaluation-config: must provide an evaluation function.")
-    :reader evaluation-function
-    :documentation "Evaluation function (required).")
-   (scaling-function 
-    :initarg :scaling-function :initform nil
-    :reader scaling-function
-    :documentation "Scaling function (optional).")
-   (scaling-p 
-    :reader scaling-p
-    :documentation "Indicates if scaling is set.")))
-
-(defmethod initialize-instance :after ((config evaluation-config) &key)
-  (if (slot-value config 'scaling-function)
-      (setf (slot-value config 'scaling-p) t)
-      (setf (slot-value config 'scaling-p) nil)))
-
-(defun make-evaluation-config (evaluation-function &optional scaling-function)
-  "Return an evaluation configuration."
-  (make-instance 'evaluation-config
-		 :evaluation-function evaluation-function
-		 :scaling-function scaling-function))
-  
-
 ;;;
 ;;; methods
 ;;;
