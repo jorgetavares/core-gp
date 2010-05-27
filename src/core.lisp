@@ -1,30 +1,6 @@
 (in-package #:core-gp)
 
 ;;;
-;;; GP engine
-;;;
-
-(defstruct core-params
-  (genome-type 'tree-genome)
-  (total-generations 100)
-  (pop-size 100)
-  (genome-size 10)
-  (initial-depth 2)
-  (max-depth 5)
-  (sets nil)
-  (fitness nil)
-  (t-size 3)
-  (crossover #'tree-crossover)
-  (mutation  #'point-mutation)
-  (cx-rate 0.9)
-  (mt-rate 0.1)
-  (node-rate 0.05)
-  (elitism t)
-  (type :generational)
-  )
-
-
-;;;
 ;;; id generation 
 ;;;
 
@@ -43,60 +19,45 @@
 ;;; core engine
 ;;;
 
-(defun ga (&key (generations 10) (pop-size) (genome-type 'bit-genome) (genome-size 10)
-	   (type :generational) (elitism t) (evaluation-function nil) 
-	   (crossover #'one-point-crossover) (mutation #'flip-mutation)
-	   (id "ga") (output :screen) (params nil))
-  "Start a GA engine."
-  (let* ((fitness evaluation-function)
-	 (core-params (if params params
-			  (make-core-params :genome-type genome-type
-					    :total-generations generations
-					    :pop-size pop-size
-					    :genome-size genome-size
-					    :fitness fitness
-					    :elitism elitism
-					    :crossover crossover
-					    :mutation mutation
-					    :type type))))
-    (config-output core-params output id (core-params-type core-params))))
+(defun ga-generic (&key (pop-size) (genome-type 'bit-genome) (genome-size 10)
+		   (evaluation-fn nil) (scaling-fn nil)
+		   (cx-operator #'one-point-crossover) (cx-rate 0.75)
+		   (mt-operator #'flip-mutation) (mt-rate 1.0) (mt-gene-rate 0.01)
+		   (selection #'tournament) (replacement-mode :generational) (elitism t) 
+		   (terminal-condition :generations) (terminal-value 10) 
+		   (stop nil) (optimum-solution nil)
+		   (id "ga") (output :screen))
+  "Configure and start a GA engine."
+  (let ((ga-config (make-core-config
+		    (make-linear-population-config pop-size genome-type genome-size)
+		    (make-operators-config :cx-operator cx-operator
+					   :cx-rate cx-rate
+					   :mt-operator mt-operator
+					   :mt-rate mt-rate
+					   :mt-gene-rate mt-gene-rate)
+		    (make-evaluation-config evaluation-fn scaling-fn)
+		    (make-selection-config selection replacement elitism)
+		    (make-terminal-config terminal-condition 
+					  condition-value stop 
+					  optimum-solution))))
+    (config-output ga-config output id)))
 
-(defun gp (sets &key (id "gp") (output :screen) 
-	   (generations 10) (pop-size 10) (initial-depth 2) 
-	   (max-depth 5) (elitism t) (crossover #'tree-crossover) (mutation #'point-mutation)
-	   (fitness-function nil) (params nil) (type :generational)) 
-  "Start a GP engine."
-  (let* ((fitness fitness-function)
-	 (core-params (if params params
-			  (make-core-params :total-generations generations
-					    :pop-size pop-size
-					    :initial-depth initial-depth
-					    :max-depth max-depth
-					    :sets sets
-					    :fitness fitness
-					    :elitism elitism
-					    :crossover crossover
-					    :mutation mutation
-					    :type type))))
-    (config-output core-params output id (core-params-type core-params))))
-
-(defun config-output (parameters output id type)
+(defun config-output (config output id)
   "Config a GP run output (:none, :screen, :files, or both)."
   (if (member output '(:files :screen+files))
-      (with-open-file (run-stream  (concatenate 'string "stats-" id)
+      (with-open-file (run-stream  (concatenate 'string id "-stats.txt")
 				   :direction :output :if-exists :supersede)
-	(with-open-file (best-stream (concatenate 'string "best-" id) 
+	(with-open-file (best-stream (concatenate 'string id "-best.txt") 
 				     :direction :output :if-exists :supersede)
-	  (run-core parameters output (list run-stream best-stream))))
-      (run-core parameters output nil)))
-
+	  (run-core config output (list run-stream best-stream))))
+      (run-core config output nil)))
 
 ;;;
 ;;; main evolutionary loop
 ;;;
 
-(defun run-core (parameters output streams)
-  "Main loop."
+(defun run-core (config output streams)
+  "Generic evolution loop."
   (let* ((genome-type (core-params-genome-type parameters))
 	 (genome-size (core-params-genome-size parameters))
 	 (type (core-params-type parameters)))

@@ -35,6 +35,15 @@
     :documentation "Terminal condition configuration.")   
    ))
 
+(defun make-core-config (population operators evaluation selection terminal-condition)
+  "Return an algorithm configuration."
+  (make-instance 'core-config
+		 :population population
+		 :operators operators
+		 :evaluation evaluation
+		 :selection selection
+		 :terminal-condition terminal-condition))
+
 ;;
 ;; population configuration
 
@@ -50,35 +59,83 @@
     :reader genome-type
     :documentation "The genome type of the individuals.")))
 
+;; for populations with linear genomes
+(defclass linear-population-config (population-config)
+  ((genome-size
+    :initarg :genome-size
+    :initform (error "linear-population-config: must provide a genome length.")
+    :reader genome-size
+    :documentation "Length of the individual's genome.")))
+
+(defun make-linear-population-config (size genome-type genome-size)
+  "Return a population configuration."
+  (make-instance 'linear-population-config
+		 :size size
+		 :genome-type genome-type
+		 :genome-size genome-size))
+
+;; for populations with tree genomes
+(defclass tree-population-config (population-config)
+  ((size-type
+    :initarg :tree-size-type :initform :depth
+    :reader tree-size-type
+    :documentation "The type of the tree size :depth or :node-count.")
+   (initial-limit
+    :initarg :initial-limit :initform 0
+    :reader initial-limit
+    :documentation "Initial tree depth or number of nodes.")
+   (maximum-limit
+    :initarg :maximum-limit :initform 0
+    :reader maximum-limit
+    :documentation "Maximum tree depth or number of nodes."))
+
+(defun make-tree-population-config (pop-size tree-size-type initial maximum)
+  "Return a tree population configuration."
+  (make-instance 'tree-population-config
+		 :size pop-size
+		 :genome-type 'tree-genome
+		 :tree-size-type tree-size-type
+		 :initial-limit initial
+		 :maximum-limit maximum))
+
 ;;
 ;; genetic operators
 
 (defclass operators-config ()
   ((crossover-operator
     :initarg :cx-operator 
-    :initform (error "operators-config: must provide a crossover operator.")
+    :initform nil
     :reader cx-operator
     :documentation "Crossover operator.")
    (crossover-rate
     :initarg :cx-rate
-    :initform (error "operators-config: must provide a crossover rate.")
+    :initform nil
     :reader cx-rate
     :documentation "Crossover aplication rate.")
    (mutation-operator
     :initarg :mt-operator
-    :initform (error "operators-config: must provide a mutation operator.")
+    :initform nil
     :reader mt-operator
     :documentation "Mutation operator.")
    (mutation-rate
     :initarg :mt-rate
-    :initform (error "operators-config: must provide a mutation aplication rate.")
+    :initform nil
     :reader mt-rate
     :documentation "Mutation aplication rate.")
    (mutation-gene-rate
     :initarg :mt-gene-rate
-    :initform (error "operators-config: must provide a mutation gene rate.")
+    :initform nil
     :reader mt-gene-rate
     :documentation "Mutation aplication rate, gene by gene.")))
+
+(defun make-operators-config (&key cx-operator cx-rate mt-operator mt-rate mt-gene-rate)
+  "Return a genetic operators configuration."
+  (make-instance 'operators-config
+		 :cx-operator cx-operator
+		 :cx-rate cx-rate
+		 :mt-operator mt-operator
+		 :mt-rate mt-rate
+		 :mt-gene-rate mt-gene-rate))
 
 ;;
 ;; selection configuration
@@ -100,6 +157,13 @@
     :reader elitism-mode
     :documentation "Elitism mode.")))
 
+(defun make-selection-config (selection replacement &optional elitism)
+  "Return a selection configuration"
+  (make-instance 'selection-config
+		 :selection-operator selection
+		 :replacement-mode replacement
+		 :elitism-mode elitism))
+
 ;;
 ;; terminal configuration
 
@@ -114,14 +178,24 @@
     :initform (error "terminal-config: must provide a value for the terminal condition.")
     :reader condition-value
     :documentation "The value for teh condition, e.g., generations, fitness evaluations.")
-   (stop-with-optimum-p
+   (stop-with-optimum
     :initarg :stop-with-optimum
     :initform nil
     :reader stop-with-optimum-p
-    :documentation "Terminate if the optimum is found (must provide the solution).")
-   (optimum-value 
-    :reader optimum
-    :documentation "The optimum value/solution to terminate the search.")))
+    :documentation "Indicates if search should be stoped when optimum is found.")
+   (optimum-solution
+    :initarg :optimum-solution
+    :initform nil
+    :reader optimum-solution
+    :documentation "Solution to be compared to stop the search.")))
+
+(defun make-terminal-config (condition value &optional stop solution)
+  "Return a temrinal condition configuration."
+  (make-instance 'terminal-config
+		 :terminal-condition condition
+		 :condition-value value
+		 :stop-with-optimum stop
+		 :optimum-solution solution))
 
 ;;
 ;; evaluation configuration
@@ -151,28 +225,3 @@
   (make-instance 'evaluation-config
 		 :evaluation-function evaluation-function
 		 :scaling-function scaling-function))
-  
-
-;;;
-;;;
-;;;
-
-(defstruct core-params
-  (genome-type 'tree-genome)
-  (total-generations 100)
-  (pop-size 100)
-  (genome-size 10)
-  (initial-depth 2)
-  (max-depth 5)
-  (sets nil)
-  (fitness nil)
-  (t-size 3)
-  (crossover #'tree-crossover)
-  (mutation  #'point-mutation)
-  (cx-rate 0.9)
-  (mt-rate 0.1)
-  (node-rate 0.05)
-  (elitism t)
-  (type :generational)
-  )
-
