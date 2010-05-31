@@ -115,7 +115,7 @@
 		(progn
 		  (setf offspring (funcall selection-fn population comparator))
 		  (setf (genome offspring)
-			(funcall (mt-operator (operators config)) offspring config))
+			(funcall (mt-operator (operators config)) (genome offspring) config))
 		  (setf (eval-p offspring) nil)))
 	    (evaluate-individual offspring (evaluation config))
 	    (setf (aref (individuals population) 

@@ -17,10 +17,10 @@
 	      (setf best (clone current)))) ; must be clone and not copy
        finally (return best))))
 
-(defun index-tournament (tournament-size population comparator)
+(defun index-tournament (pop tournament-size comparator)
   "Tournament selection: return best individual from a random set of a given size."
-  (let* ((size (size population))
-	 (population (individuals population))
+  (let* ((size (size pop))
+	 (population (individuals pop))
 	 (bindex (random size))
 	 (best (aref population bindex)))
     (loop for n from 1 below tournament-size

@@ -47,17 +47,17 @@
 ;;; run GP
 ;;;
 
-(defun regression (&key (id "gp-regression") (output :screen) (pop-size 600) (generations 50))
+(defun regression (&key (id "gp-regression") (output :screen) (pop-size 600) (generations 10))
   (core-gp:gp-generic :id id
 		      :output output
 		      :pop-size pop-size
 		      :fset-names *fset*
 		      :tset-names *tset*
-		      :initial-size 5
-		      :maximum-size 15
+		      :initial-size 1
+		      :maximum-size 4
 		      :evaluation-fn (make-fitness-regression *fitness-cases* 
 							      *x-points* *y-points*)
-		      :elitism t
-		      :replacement-mode :generational
+		      :elitism nil
+		      :replacement-mode :steady-state
 		      :terminal-value generations))
 		      
