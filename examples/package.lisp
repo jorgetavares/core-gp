@@ -1,4 +1,5 @@
 (defpackage #:core-gp-examples
   (:use #:common-lisp #:core-gp)
-  (:export #:regression
+  (:export #:onemax 
+	   #:regression
            #:gp-sin))

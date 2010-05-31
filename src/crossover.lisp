@@ -27,7 +27,7 @@
 (defmethod one-point-crossover ((genome1 bit-genome) (genome2 bit-genome) config)
   (let ((size (genome-size (population config))))
       (multiple-value-bind (o1 o2)
-	  (cross-bit-chromossomes genome1 genome2 size)
+	  (cross-bit-chromossomes (chromossome genome1) (chromossome genome2) size)
 	(values (make-instance
 		 'individual 
 		 :id (generate-id) :genome (make-bit-genome o1 size))
