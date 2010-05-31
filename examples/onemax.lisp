@@ -18,11 +18,11 @@
 ;;; run GP
 ;;;
 
-(defun onemax (&key (id "ga-onemax") (output :screen) (pop-size 20) (generations 10))
+(defun onemax (&key (id "ga-onemax") (output :screen) (pop-size 20) (genome-size 10) (generations 10))
   (core-gp:ga-generic :id id
 		      :output output
 		      :pop-size pop-size
-		      :genome-size 10
+		      :genome-size genome-size
 		      :evaluation-fn #'count-ones
 		      :elitism t
 		      :replacement-mode :generational

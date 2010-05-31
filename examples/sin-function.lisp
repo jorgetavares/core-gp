@@ -8,25 +8,19 @@
 ;;; function and terminal sets
 ;;;
 
-;(defparameter *X* 0)
+;; variable
+(defparameter *X* 0)
+(defnode var-x (() (:string "X" :ephemeral nil)) *X*)
 
-;(defun var-x () 
-;  *X*)
+;; constants
+(defun real-constants (min max)
+  #'(lambda ()
+      (+ min (random (float (1+ (- max min)))))))
+(setf core-gp:*generate-constant* (real-constants -5 5))
 
-;(defun real-constants (min max)
-;  #'(lambda ()
-;      (+ min (random (float (1+ (- max min)))))))
-
-;(setf core-gp:*generate-constant* (real-constants -5 5))
-
-;(defparameter *fset* (core-gp:make-fset 'core-gp:gp-plus 2
-;					'core-gp:gp-minus 2 
-;					'core-gp:gp-times 2
-;					'core-gp:gp-divison 2
-;					))
-
-;(defparameter *tset* '(core-gp:gp-constant var-x))
-
+;; functions and terminals
+(defparameter *fset* '(gp-plus gp-minus gp-times gp-division))
+(defparameter *tset* '(gp-constant var-x))
 
 ;;;
 ;;; fitness function ( y = f(x) = sin (x) )
@@ -98,70 +92,29 @@
 
 (defparameter *data-points* (make-array '(63 2) :initial-contents *sin-data-points*))
 
-;(defun make-fitness-sin (fitness-cases data-points)
-;  #'(lambda (individual id generation)
-;      (declare (ignore id generation))
-;      (loop for i from 0 below fitness-cases
-;	 do (setf *X* (aref data-points i 0))
-;	 sum (expt (- (eval (core-gp:individual-tree individual)) 
-;		      (aref data-points i 1)) 2))))
-
-;(defun make-compiled-fitness-sin (fitness-cases data-points)
-;  #'(lambda (individual id generation)
- ;     (declare (ignore id generation))
- ;     (loop with prog = (compile nil 
-;				 `(lambda () 
-;				    ,(core-gp:individual-tree individual))) 
-;	 for i from 0 below fitness-cases
-;	 do (setf *X* (aref data-points i 0))
-;	 sum (expt (- (funcall prog) 
-;		      (aref data-points i 1)) 2))))
-
+(defun make-fitness-sin (fitness-cases data-points)
+  #'(lambda (candidate-solution)
+      (loop for i from 0 below fitness-cases
+	 do (setf *X* (aref data-points i 0))
+	 sum (expt (- (eval candidate-solution) 
+		      (aref data-points i 1)) 2))))
 
 ;;;
 ;;; run GP
 ;;;
 
-
-;(defparameter *sin-params* (core-gp:make-gp-params :total-generations 5
-;						   :pop-size 10000
-;						   :initial-depth 5
-;						   :max-depth 15
-;						   :fset *fset*
-;						   :tset *tset*
-;						   :fitness (make-fitness-sin
-;							     63 *data-points*)
-;						   :elitism t
-;						   :type :generational
-;						   ))
-
-;(defun gp-sin (&key (params *sin-params*) (runs 1) (output :screen)) 
-;  (loop for run from 1 to runs
-;     collect (core-gp:launch-gp run *fset* *tset* :params params :output output))) 
-		 
-
-
-;(defun run-tree (tree &optional (compile-p nil))
- ; (let ((prog (if compile-p
-;		  (compile nil `(lambda () ,tree))
-;		  tree)))
- ;   (do ((point 0.0 (+ point 0.1)))
-;	((> point 6.2) 'done)
- ;     (setf *X* point)
-  ;    (if compile-p
-;	  (format t "~a ~%" (funcall prog))
-;	  (format t "~a ~%" (eval prog))))))
-
-;(defun run-tree2 (tree &optional (compile-p nil))
-;  (let ((prog (if compile-p
-;		  (compile nil `(lambda () ,tree))
-;		  tree)))
-;    (do ((point 0.0 (+ point 0.1)))
-;	((> point 6.2) 'done)
- ;     (setf *X* point)
-  ;    (if compile-p
-;	  (funcall prog)
-;	  (eval prog)))))
+(defun gp-sin (&key (id "gp-sin") (output :screen) (pop-size 1000) (generations 10))
+  (core-gp:gp-generic :id id
+		      :output output
+		      :pop-size pop-size
+		      :fset-names *fset*
+		      :tset-names *tset*
+		      :initial-size 2
+		      :maximum-size 5
+		      :evaluation-fn (make-fitness-sin 63 *data-points*)
+		      :elitism nil
+		      :replacement-mode :steady-state
+		      :terminal-value generations))
 
 ;(#S(INDIVIDUAL
 ;    :TREE (GP-DIVISON (GP-MINUS 3.1250563 (VAR-X))
