@@ -42,6 +42,12 @@
 		 :fitness-score (fitness-score fitness)))
 
 
+(defmethod print-object ((object fitness) stream)
+  (print-unreadable-object (object stream :type t)
+    (with-slots (raw-score fitness-score) object
+      (format stream "raw-score: ~a fitness-score: ~a" raw-score fitness-score)))) 
+
+
 ;;;
 ;;; methods
 ;;;

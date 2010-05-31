@@ -31,18 +31,20 @@
 ;;; individual methods
 ;;;
 
-(defgeneric copy (individual)
-  (:documentation "Return a new identical object to individual but with a different id."))
+(defgeneric copy (object)
+  (:documentation "Returna copy of the object."))
+
+(defgeneric clone (individual)
+  (:documentation "Return a new identical object to individual."))
+
 
 (defmethod copy ((individual individual))
+  "Return a new identical object to individual but with a different id."
   (make-instance 'individual
 		 :id (generate-id)
 		 :genome (copy (genome individual))
 		 :fitness (copy (fitness individual))
 		 :eval-p (eval-p individual)))
-
-(defgeneric clone (individual)
-  (:documentation "Return a new identical object to individual."))
 
 (defmethod clone ((individual individual))
   (make-instance 'individual
@@ -50,6 +52,11 @@
 		 :genome (copy (genome individual))
 		 :fitness (copy (fitness individual))
 		 :eval-p (eval-p individual)))
+
+(defmethod print-object ((object individual) stream)
+  (print-unreadable-object (object stream :type t)
+    (with-slots (id genome fitness eval-p) object
+      (format stream "id: ~a~% ~a~% fitness: ~a eval-p: ~a" id genome fitness eval-p)))) 
 
 
 ;;;
@@ -137,9 +144,6 @@
 ;;; methods
 ;;;
 
-(defgeneric copy (genome)
-  (:documentation "Return a new identical object to genome."))
-
 (defmethod copy ((genome bit-genome))
   (make-instance 'bit-genome
 		 :chromossome (copy-array (chromossome genome))
@@ -156,6 +160,21 @@
 		 :tree-depth (tree-depth genome)
 		 :nodes-count (nodes-count genome)))
 
+(defmethod print-object ((object genome) stream)
+  (print-unreadable-object (object stream :type t)
+    (with-slots (chromossome) object
+      (format stream "~a" chromossome)))) 
+
+(defmethod print-object ((object linear-genome) stream)
+  (print-unreadable-object (object stream :type t)
+    (with-slots (chromossome size) object
+      (format stream "~a size: ~a" chromossome size)))) 
+
+(defmethod print-object ((object tree-genome) stream)
+  (print-unreadable-object (object stream :type t)
+    (with-slots (chromossome tree-depth nodes-count) object
+      (format stream "~a depth: ~a nodes-count: ~a" 
+	      chromossome tree-depth nodes-count)))) 
 
 ;;;
 ;;; population
@@ -175,9 +194,6 @@
 ;;; methods
 ;;;
 
-(defgeneric copy (population)
-  (:documentation "Return a new identical population."))
-
 (defmethod copy ((population population))
   (let* ((size (size population))
 	 (copy (make-array size)))
@@ -186,6 +202,12 @@
 		(copy (aref (individuals population) index)))
        finally (return (make-instance 'population 
 				      :individuals copy :size size)))))
+
+(defmethod print-object ((object population) stream)
+  (print-unreadable-object (object stream :type t)
+    (with-slots (individuals size) object
+      (format stream "~a~% size: ~a" individuals size)))) 
+
 
 ;;;
 ;;; builders
