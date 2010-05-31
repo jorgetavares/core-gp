@@ -63,8 +63,8 @@
 		(elitism population best inverse-comparator))
 	      (setf best (copy (aref (individuals population)
 				     (find-best population comparator))))
-	      (when (< (raw-score (fitness best))
-		       (raw-score (fitness run-best)))
+	      (when (funcall comparator (raw-score (fitness best))
+			     (raw-score (fitness run-best)))
 		(setf run-best (copy best))
 		(setf new-best-p t))
 	      (output-generation generation population best 

@@ -18,7 +18,7 @@
 ;;; run GP
 ;;;
 
-(defun onemax (&key (id "ga-onemax") (output :screen) (pop-size 20) (genome-size 10) (generations 10))
+(defun onemax (&key (id "ga-onemax") (output :screen) (pop-size 80) (genome-size 20) (generations 100))
   (core-gp:ga-generic :id id
 		      :output output
 		      :pop-size pop-size
@@ -29,7 +29,7 @@
 		      :cx-operator #'one-point-crossover
 		      :cx-rate 0.75
 		      :mt-operator #'flip-mutation
-		      :mt-gene-rate 0.05
+		      :mt-gene-rate 0.01
 		      :terminal-value generations
 		      :comparator #'>))
 
