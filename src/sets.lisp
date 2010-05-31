@@ -1,4 +1,4 @@
-;(in-package #:core-gp)
+(in-package #:core-gp)
 
 ;;;
 ;;; sets container
@@ -14,7 +14,7 @@
     :initarg :terminals 
     :initform (error "Class sets-container: must provide a list with terminals.")
     :accessor terminals
-    (:documentation "Terminal Set."))
+    :documentation "Terminal Set.")
    (functions-size
     :reader functions-size
     :documentation "Number of elements in the Function Set.")
@@ -59,26 +59,39 @@
 ;;
 ;; methods
 
+(defgeneric random-terminal-node (container)
+  (:documentation "Select a random terminal."))
+
 (defmethod random-terminal-node ((container sets-container))
   (nth (random (slot-value container 'terminals-size))
        (slot-value container 'terminals)))
 
+(defgeneric random-function-node (container &optional arity)
+  (:documentation "Select a random function."))
+
 (defmethod random-function-node ((container sets-container) &optional arity)
   (if arity
       (let ((nodes (gethash arity (slot-value container 'arity-table))))
-	(nth (random (length nodes-size)) nodes))
+	(nth (random (length nodes)) nodes))
       (nth (random (slot-value container 'functions-size))
 	   (slot-value container 'functions))))
+
+(defgeneric find-terminal-node (name container)
+  (:documentation "Find a random terminal."))
 
 (defmethod find-terminal-node (name (container sets-container))
   (find name (slot-value container 'functions) 
 	:test #'(lambda (element node)
 		  (eql element (operator node)))))
 
+(defgeneric find-function-node (name container)
+  (:documentation "Find a random terminal."))
+
 (defmethod find-function-node (name (container sets-container))
   (find name (slot-value container 'functions) 
 	:test #'(lambda (element node)
 		  (eql element (operator node)))))
+
 
 
 ;;;

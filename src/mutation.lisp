@@ -1,18 +1,18 @@
-;(in-package #:core-gp)
+(in-package #:core-gp)
 
 ;;;
 ;;; point mutation
 ;;;
 
-(defun apply-mutation (population parameters)
+(defun apply-mutation (population config)
   "Apply point mutation crossover to the population."
-  (let ((mt-rate (core-params-mt-rate parameters)))
+  (let ((mt-rate (mt-rate (operators config))))
     (loop for position from 0 below (size population)
        do (when (< (random 1.0) mt-rate)
 	    (let ((individual (aref (individuals population) position)))
 	      (setf (genome individual)
-		    (funcall (core-params-mutation parameters)
-			     (genome individual) parameters))
+		    (funcall (mt-operator (operators config))
+			     (genome individual) config))
 	      (setf (eval-p individual) t))))))
 
 
@@ -20,11 +20,14 @@
 ;;; GA operators
 ;;;
 
-(defmethod flip-mutation ((genome bit-genome) parameters)
-  (let ((gene-rate (core-params-node-rate parameters))
+(defgeneric flip-mutation (genome config)
+  (:documentation "Flip mutation operator."))
+
+(defmethod flip-mutation ((genome bit-genome) config)
+  (let ((gene-rate (mt-gene-rate (operators config)))
 	(chromossome (chromossome genome)))
     (loop for index from 0 below (size genome)
-       when (< (random 1.0) node-rate)
+       when (< (random 1.0) gene-rate)
        do (let ((gene (aref chromossome index)))
 	    (setf (aref chromossome index)
 		  (if (= gene 1) 0 1))))
@@ -34,13 +37,16 @@
 ;;;
 ;;; GP operators
 ;;;
+
+(defgeneric point-mutation (genome config)
+  (:documentation "Point mutation operator."))
 	 
-(defmethod point-mutation ((genome tree-genome) parameters)
+(defmethod point-mutation ((genome tree-genome) config)
   "Point mutation: for every node that can be mutated, changes to an equivalent type."
   (setf (chromossome genome)
 	(point-mutate-tree (chromossome genome) 
-			   (core-params-node-rate parameters) 
-			   (core-params-sets parameters)))
+			   (mt-gene-rate (operators config)) 
+			   (sets (extra-configurations config))))
   genome)
 
 (defun point-mutate-tree (tree rate sets)

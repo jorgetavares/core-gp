@@ -1,4 +1,4 @@
-;(in-package #:core-gp)
+(in-package #:core-gp)
 
 ;;;
 ;;; representation and population initialization
@@ -69,7 +69,7 @@
 
 (defclass genome ()
   ((chromossome
-    :initarg :genome :initform nil
+    :initarg :chromossome :initform nil
     :accessor chromossome
     :documentation "Genome slot.")))
 
@@ -199,9 +199,11 @@
 
 (defun make-random-population (size genome-type genome-size &rest args)
   (make-population 
+   :individuals
    (make-array size
 	       :initial-contents 
 	       (loop repeat size
 		  collect (apply #'make-random-individual
-				 (generate-id) genome-type genome-size args)))))
+				 (generate-id) genome-type genome-size args)))
+   :size size))
 

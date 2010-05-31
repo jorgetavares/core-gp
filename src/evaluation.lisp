@@ -1,4 +1,4 @@
-;(in-package #:core-gp)
+(in-package #:core-gp)
 
 ;;;
 ;;; classes
@@ -18,10 +18,10 @@
     :documentation "Scaled value of raw-score.")))
 
 (defmethod initialize-instance :after ((fitness fitness) &key scaling-function)
-  (if scaling-function
-      (setf (slot-value fitness 'fitness-score)
-	    (funcall scaling-function (slot-value fitness 'raw-score)))
-      nil))
+  (setf (slot-value fitness 'fitness-score)
+	(if scaling-function
+     	    (funcall scaling-function (slot-value fitness 'raw-score))
+	    nil)))
 
 (defun make-fitness (&key raw-score scaling-function)
   "Create an empty of filled fitness."

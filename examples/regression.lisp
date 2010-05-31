@@ -9,21 +9,19 @@
 ;;; function and terminal sets
 ;;;
 
+;; variable
 (defparameter *X* 0)
 (defnode var-x (() (:string "X" :ephemeral nil)) *X*)
 
+;; constants
 (defun int-constants (min max)
   #'(lambda ()
       (+ min (random (1+ (- max min))))))
 (setf core-gp:*generate-constant* (int-constants -5 5))
 
-(defparameter *fset* (core-gp:make-set 'core-gp:gp-plus
-				       'core-gp:gp-minus 
-				       'core-gp:gp-times
-				       'core-gp:gp-divison
-				       ))
-
-(defparameter *tset* '(core-gp:gp-constant var-x))
+;; functions and terminals
+(defparameter *fset* '(gp-plus gp-minus gp-times gp-division))
+(defparameter *tset* '(gp-constant var-x))
 
 
 ;;;
@@ -49,20 +47,17 @@
 ;;; run GP
 ;;;
 
-
-(defparameter *regression-params* (core-gp:make-gp-params :total-generations 10
-							  :pop-size 1000
-							  :initial-depth 1
-							  :max-depth 4
-							  :fset *fset*
-							  :tset *tset*
-							  :fitness (make-fitness-regression 
-								    *fitness-cases* 
-								    *x-points* *y-points*)
-							  :elitism nil
-							  :type :steady-state
-							  ))
-
-(defun regression (&key (params *regression-params*) (runs 1)  (output :screen))
-  (loop for run from 1 to runs
-     collect (core-gp:launch-gp run *fset* *tset* :params params :output output)))
+(defun regression (&key (id "gp-regression") (output :screen) (pop-size 600) (generations 50))
+  (core-gp:gp-generic :id id
+		      :output output
+		      :pop-size pop-size
+		      :fset-names *fset*
+		      :tset-names *tset*
+		      :initial-size 5
+		      :maximum-size 15
+		      :evaluation-fn (make-fitness-regression *fitness-cases* 
+							      *x-points* *y-points*)
+		      :elitism t
+		      :replacement-mode :generational
+		      :terminal-value generations))
+		      

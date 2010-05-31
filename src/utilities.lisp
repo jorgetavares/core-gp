@@ -16,11 +16,7 @@
   "Average of population's fitness."
   (loop for individual across (individuals population)
      sum (raw-score (fitness individual)) into avg-raw
-     if (numberp (raw-score (fitness individual))) 
-     sum (raw-score (fitness individual)) into avg-fit
-     else sum 0 into avg-fit
      finally (return (values 
 		      (/ avg-raw (size population))
-		      (if (> avg-fit 0)
-			  (/ avg-fit (size population))
-			  0)))))
+		      0))))
+

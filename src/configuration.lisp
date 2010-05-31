@@ -1,4 +1,4 @@
-;(in-package #:core-gp)
+(in-package #:core-gp)
 
 ;;;
 ;;; Engine configuration 
@@ -32,17 +32,51 @@
     :initarg :terminal-condition
     :initform (error "core-config: must provide a terminal-condition configuration.")
     :reader terminal-condition
-    :documentation "Terminal condition configuration.")   
+    :documentation "Terminal condition configuration.")
+   (extra-configurations
+    :initarg :extra
+    :initform (make-instance 'extra-config)
+    :reader extra-configurations
+    :documentation "Extra elements.")
    ))
 
-(defun make-core-config (population operators evaluation selection terminal-condition)
+(defun make-core-config (population operators evaluation selection terminal extra)
   "Return an algorithm configuration."
   (make-instance 'core-config
 		 :population population
 		 :operators operators
 		 :evaluation evaluation
 		 :selection selection
-		 :terminal-condition terminal-condition))
+		 :terminal-condition terminal
+		 :extra extra))
+
+;;
+;; extra configurations
+
+(defclass extra-config ()
+  ((comparator
+    :initarg :comparator :initform #'<
+    :reader comparator
+    :documentation "Defines if the algorithm minimizes or maximizes.")
+   (inverse-comparator
+    :reader inverse-comparator
+    :documentation "The opposite of the comparator.")
+   (sets 
+    :initarg :sets :initform nil
+    :reader sets 
+    :documentation "Function and Terminal Sets for GP algorithms.")))
+
+(defmethod initialize-instance :after ((config extra-config) &key)
+  (if (eql (slot-value config 'comparator) #'<)
+      (setf (slot-value config 'inverse-comparator) #'>)
+      (setf (slot-value config 'inverse-comparator) #'<)))
+
+(defun make-extra-config (&key comparator sets)
+  "Return a configuration of extra elements."
+  (make-instance 'extra-config 
+		 :comparator comparator
+		 :sets sets))
+
 
 ;;
 ;; population configuration
@@ -54,7 +88,7 @@
     :accessor size
     :documentation "Number of individuals in a single population.")
    (genome-type 
-    :initarg genome=type
+    :initarg :genome-type
     :initform (error "population-config: must provide a genome type.")
     :reader genome-type
     :documentation "The genome type of the individuals.")))
@@ -80,23 +114,29 @@
     :initarg :tree-size-type :initform :depth
     :reader tree-size-type
     :documentation "The type of the tree size :depth or :node-count.")
-   (initial-limit
-    :initarg :initial-limit :initform 0
-    :reader initial-limit
+   (initial-size
+    :initarg :initial-size :initform 0
+    :reader initial-size
     :documentation "Initial tree depth or number of nodes.")
-   (maximum-limit
-    :initarg :maximum-limit :initform 0
-    :reader maximum-limit
-    :documentation "Maximum tree depth or number of nodes."))
+   (maximum-size
+    :initarg :maximum-size :initform 0
+    :reader maximum-size
+    :documentation "Maximum tree depth or number of nodes.")
+   (tree-generator
+    :initarg :tree-generator
+    :initform #'ramped-half-and-half
+    :reader tree-generator
+    :documentation "Tree generator.")))
 
-(defun make-tree-population-config (pop-size tree-size-type initial maximum)
+(defun make-tree-population-config (pop-size tree-size-type initial maximum generator)
   "Return a tree population configuration."
   (make-instance 'tree-population-config
 		 :size pop-size
 		 :genome-type 'tree-genome
 		 :tree-size-type tree-size-type
-		 :initial-limit initial
-		 :maximum-limit maximum))
+		 :initial-size initial
+		 :maximum-size maximum
+		 :tree-generator generator))
 
 ;;
 ;; genetic operators

@@ -1,18 +1,18 @@
-;(in-package #:core-gp)
+(in-package #:core-gp)
 
 ;;;
 ;;; subtree crossover
 ;;;
 
-(defun apply-crossover (pop parameters)
+(defun apply-crossover (pop config)
   "Apply tree crossover to the population."
   (loop with population = (individuals pop) 
      for position from 0 below (size pop) by 2
-     do (when (< (random 1.0) (core-parameters-cx-rate parameters))
+     do (when (< (random 1.0) (cx-rate (operators config)))
 	  (multiple-value-bind (o1 o2)
-	      (funcall (core-params-crossover parameters)
+	      (funcall (cx-operator (operators config))
 		       (genome (aref population position)) 
-		       (genome (aref population (1+ position))) parameters)
+		       (genome (aref population (1+ position))) config)
 	    (setf (aref population position) o1 
 		  (aref population (1+ position)) o2)))))
 
@@ -21,8 +21,11 @@
 ;;; GA operators
 ;;;
 
-(defmethod one-point-crossover ((genome1 bit-genome) (genome2 bit-genome) parameters)
-  (let ((size (core-params-genome-size parameters)))
+(defgeneric one-point-crossover (genome1 genome2 config)
+  (:documentation "One point crossover operator."))
+
+(defmethod one-point-crossover ((genome1 bit-genome) (genome2 bit-genome) config)
+  (let ((size (genome-size (population config))))
       (multiple-value-bind (o1 o2)
 	  (cross-bit-chromossomes genome1 genome2 size)
 	(values (make-instance
@@ -47,11 +50,14 @@
 ;;; GP operators
 ;;;
 
-(defmethod tree-crossover ((genome1 tree-genome) (genome2 tree-genome) parameters)
+(defgeneric tree-crossover (genome1 genome2 config)
+  (:documentation "Tree crossover operator."))
+
+(defmethod tree-crossover ((genome1 tree-genome) (genome2 tree-genome) config)
   (multiple-value-bind (o1 o2)
-      (cross-subtrees (chromossome p1) 
-		      (chromossome p2) 
-		      (core-params-max-depth parameters))
+      (cross-subtrees (chromossome genome1) 
+		      (chromossome genome2) 
+		      (maximum-size (population config)))
     (values (make-instance 
 	     'individual 
 	     :id (generate-id)

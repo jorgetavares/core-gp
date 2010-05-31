@@ -8,24 +8,24 @@
 ;;; function and terminal sets
 ;;;
 
-(defparameter *X* 0)
+;(defparameter *X* 0)
 
-(defun var-x () 
-  *X*)
+;(defun var-x () 
+;  *X*)
 
-(defun real-constants (min max)
-  #'(lambda ()
-      (+ min (random (float (1+ (- max min)))))))
+;(defun real-constants (min max)
+;  #'(lambda ()
+;      (+ min (random (float (1+ (- max min)))))))
 
-(setf core-gp:*generate-constant* (real-constants -5 5))
+;(setf core-gp:*generate-constant* (real-constants -5 5))
 
-(defparameter *fset* (core-gp:make-fset 'core-gp:gp-plus 2
-					'core-gp:gp-minus 2 
-					'core-gp:gp-times 2
-					'core-gp:gp-divison 2
-					))
+;(defparameter *fset* (core-gp:make-fset 'core-gp:gp-plus 2
+;					'core-gp:gp-minus 2 
+;					'core-gp:gp-times 2
+;					'core-gp:gp-divison 2
+;					))
 
-(defparameter *tset* '(core-gp:gp-constant var-x))
+;(defparameter *tset* '(core-gp:gp-constant var-x))
 
 
 ;;;
@@ -98,24 +98,24 @@
 
 (defparameter *data-points* (make-array '(63 2) :initial-contents *sin-data-points*))
 
-(defun make-fitness-sin (fitness-cases data-points)
-  #'(lambda (individual id generation)
-      (declare (ignore id generation))
-      (loop for i from 0 below fitness-cases
-	 do (setf *X* (aref data-points i 0))
-	 sum (expt (- (eval (core-gp:individual-tree individual)) 
-		      (aref data-points i 1)) 2))))
+;(defun make-fitness-sin (fitness-cases data-points)
+;  #'(lambda (individual id generation)
+;      (declare (ignore id generation))
+;      (loop for i from 0 below fitness-cases
+;	 do (setf *X* (aref data-points i 0))
+;	 sum (expt (- (eval (core-gp:individual-tree individual)) 
+;		      (aref data-points i 1)) 2))))
 
-(defun make-compiled-fitness-sin (fitness-cases data-points)
-  #'(lambda (individual id generation)
-      (declare (ignore id generation))
-      (loop with prog = (compile nil 
-				 `(lambda () 
-				    ,(core-gp:individual-tree individual))) 
-	 for i from 0 below fitness-cases
-	 do (setf *X* (aref data-points i 0))
-	 sum (expt (- (funcall prog) 
-		      (aref data-points i 1)) 2))))
+;(defun make-compiled-fitness-sin (fitness-cases data-points)
+;  #'(lambda (individual id generation)
+ ;     (declare (ignore id generation))
+ ;     (loop with prog = (compile nil 
+;				 `(lambda () 
+;				    ,(core-gp:individual-tree individual))) 
+;	 for i from 0 below fitness-cases
+;	 do (setf *X* (aref data-points i 0))
+;	 sum (expt (- (funcall prog) 
+;		      (aref data-points i 1)) 2))))
 
 
 ;;;
@@ -123,45 +123,45 @@
 ;;;
 
 
-(defparameter *sin-params* (core-gp:make-gp-params :total-generations 5
-						   :pop-size 10000
-						   :initial-depth 5
-						   :max-depth 15
-						   :fset *fset*
-						   :tset *tset*
-						   :fitness (make-fitness-sin
-							     63 *data-points*)
-						   :elitism t
-						   :type :generational
-						   ))
+;(defparameter *sin-params* (core-gp:make-gp-params :total-generations 5
+;						   :pop-size 10000
+;						   :initial-depth 5
+;						   :max-depth 15
+;						   :fset *fset*
+;						   :tset *tset*
+;						   :fitness (make-fitness-sin
+;							     63 *data-points*)
+;						   :elitism t
+;						   :type :generational
+;						   ))
 
-(defun gp-sin (&key (params *sin-params*) (runs 1) (output :screen)) 
-  (loop for run from 1 to runs
-     collect (core-gp:launch-gp run *fset* *tset* :params params :output output))) 
+;(defun gp-sin (&key (params *sin-params*) (runs 1) (output :screen)) 
+;  (loop for run from 1 to runs
+;     collect (core-gp:launch-gp run *fset* *tset* :params params :output output))) 
 		 
 
 
-(defun run-tree (tree &optional (compile-p nil))
-  (let ((prog (if compile-p
-		  (compile nil `(lambda () ,tree))
-		  tree)))
-    (do ((point 0.0 (+ point 0.1)))
-	((> point 6.2) 'done)
-      (setf *X* point)
-      (if compile-p
-	  (format t "~a ~%" (funcall prog))
-	  (format t "~a ~%" (eval prog))))))
+;(defun run-tree (tree &optional (compile-p nil))
+ ; (let ((prog (if compile-p
+;		  (compile nil `(lambda () ,tree))
+;		  tree)))
+ ;   (do ((point 0.0 (+ point 0.1)))
+;	((> point 6.2) 'done)
+ ;     (setf *X* point)
+  ;    (if compile-p
+;	  (format t "~a ~%" (funcall prog))
+;	  (format t "~a ~%" (eval prog))))))
 
-(defun run-tree2 (tree &optional (compile-p nil))
-  (let ((prog (if compile-p
-		  (compile nil `(lambda () ,tree))
-		  tree)))
-    (do ((point 0.0 (+ point 0.1)))
-	((> point 6.2) 'done)
-      (setf *X* point)
-      (if compile-p
-	  (funcall prog)
-	  (eval prog)))))
+;(defun run-tree2 (tree &optional (compile-p nil))
+;  (let ((prog (if compile-p
+;		  (compile nil `(lambda () ,tree))
+;		  tree)))
+;    (do ((point 0.0 (+ point 0.1)))
+;	((> point 6.2) 'done)
+ ;     (setf *X* point)
+  ;    (if compile-p
+;	  (funcall prog)
+;	  (eval prog)))))
 
 ;(#S(INDIVIDUAL
 ;    :TREE (GP-DIVISON (GP-MINUS 3.1250563 (VAR-X))

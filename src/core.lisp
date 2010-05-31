@@ -19,99 +19,57 @@
 ;;; core engine
 ;;;
 
-(defun ga-generic (&key (pop-size) (genome-type 'bit-genome) (genome-size 10)
-		   (evaluation-fn nil) (scaling-fn nil)
-		   (cx-operator #'one-point-crossover) (cx-rate 0.75)
-		   (mt-operator #'flip-mutation) (mt-rate 1.0) (mt-gene-rate 0.01)
-		   (selection #'tournament) (replacement-mode :generational) (elitism t) 
-		   (terminal-condition :generations) (terminal-value 10) 
-		   (stop nil) (optimum-solution nil)
-		   (id "ga") (output :screen))
-  "Configure and start a GA engine."
-  (let ((ga-config (make-core-config
-		    (make-linear-population-config pop-size genome-type genome-size)
-		    (make-operators-config :cx-operator cx-operator
-					   :cx-rate cx-rate
-					   :mt-operator mt-operator
-					   :mt-rate mt-rate
-					   :mt-gene-rate mt-gene-rate)
-		    (make-evaluation-config evaluation-fn scaling-fn)
-		    (make-selection-config selection replacement elitism)
-		    (make-terminal-config terminal-condition 
-					  condition-value stop 
-					  optimum-solution))))
-    (config-output ga-config output id)))
-
-(defun config-output (config output id)
-  "Config a GP run output (:none, :screen, :files, or both)."
-  (if (member output '(:files :screen+files))
-      (with-open-file (run-stream  (concatenate 'string id "-stats.txt")
-				   :direction :output :if-exists :supersede)
-	(with-open-file (best-stream (concatenate 'string id "-best.txt") 
-				     :direction :output :if-exists :supersede)
-	  (run-core config output (list run-stream best-stream))))
-      (run-core config output nil)))
-
-;;;
-;;; main evolutionary loop
-;;;
-
 (defun run-core (config output streams)
-  "Generic evolution loop."
-  (let* ((genome-type (core-params-genome-type parameters))
-	 (genome-size (core-params-genome-size parameters))
-	 (type (core-params-type parameters)))
-	 (replacement-mode (select-replacement-mode type))
-	 (total-generations (core-params-total-generations parameters))
-	 (initial-depth (core-params-initial-depth parameters))
-	 (sets (core-params-sets parameters))
-	 (fitness (core-params-fitness parameters))
-	 (t-size (core-params-t-size parameters))
-	 (cx-rate (core-params-cx-rate parameters))
-	 (mt-rate (core-params-mt-rate parameters))
-	 (node-rate (core-params-node-rate parameters))
-	 (population nil)
-	 (elitism-p (core-params-elitism parameters))
-	 (best nil) (run-best nil) (new-best-p t)
-	 (args (case genome-type
-		 ('tree-genome 
-		  (list initial-depth #'ramped-half-and-half 
-			(functions sets) (functions-size sets)
-			(terminals sets) (terminals-size sets)))
-		 ('bit-genome
-		  (list genome-size))
-		 (otherwise (error "run-core: no valid genome-type."))))
-	 (config (make-evaluation-config fitness)))
-    ;; create and evaluate initial population with new IDs
-    (reset-id)
-    (setf population 
-	  (apply #'make-random-population (core-params-pop-size parameters) genome-type args)) 
-    (evaluate-population population config)
-    ;; keep track of best individuals (generation and run)
-    (setf best (copy (aref (individuals population) (find-best population #'<))))
-    (setf run-best (copy best))
-    ;; compute stats for initial population (first generation)
-    (output-generation 1 population best run-best new-best-p output streams)
-    ;; process the remaining generations
-    (loop for generation from 2 to total-generations
-       do (progn
-	    (setf new-best-p nil)
-	    ;; do a generational or steady-state iteration
-	    (funcall replacement-mode population parameters t-size cx-rate
-		     mt-rate node-rate config)
-	    (when elitism-p (elitism population best))
-	    ;; get best of the current population
-	    (setf best (copy (aref (individuals population)
-				   (find-best population #'<))))
-	    ;; determine if is a best of run
-	    (when (< (raw-score (fitness best))
-		     (raw-score (fitness run-best)))
-	      (setf run-best (copy best))
-	      (setf new-best-p t))
-	    ;; output stats
-	    (output-generation generation population best 
-			       run-best new-best-p output streams))
-       finally (return run-best)))
+  (let ((population-config (population config))
+	(evaluation-config (evaluation config))
+	(selection-config (selection config))
+	(terminal-config (terminal-condition config))
+	(extra-config (extra-configurations config)))
+    (let* ((genome-type (genome-type population-config))
+	   (replacement-mode (select-replacement-mode 
+			      (replacement selection-config)))
+   	   (sets (sets extra-config))
+	   (comparator (comparator (extra-configurations config)))
+	   (inverse-comparator (inverse-comparator 
+				(extra-configurations config)))
+	   (population nil) 
+	   (best nil) (run-best nil) (new-best-p t)
+	   (total-generations (if (eql (terminal-condition terminal-config) 
+				       :generations)
+				  (condition-value terminal-config)
+				  (/ (condition-value terminal-config) 
+				     (size population-config))))
+	   (args (case genome-type
+		   (tree-genome 
+		    (list (initial-size population-config) 
+			  (tree-generator population-config)
+			  (functions sets) (functions-size sets)
+			  (terminals sets) (terminals-size sets)))
+		   (bit-genome
+		    (list (genome-size population-config)))
+		   (otherwise (error "run-core: no valid genome-type.")))))
+      (reset-id)
+      (setf population 
+	    (apply #'make-random-population (size population-config) genome-type args)) 
+      (evaluate-population population evaluation-config)
+      (setf best (copy (aref (individuals population) (find-best population comparator))))
+      (setf run-best (copy best))
+      (output-generation 1 population best run-best new-best-p output streams)
+      (loop for generation from 2 to total-generations
+	 do (progn
+	      (setf new-best-p nil)
+	      (funcall replacement-mode population config)
+	      (when (elitism-mode selection-config)
+		(elitism population best inverse-comparator))
+	      (setf best (copy (aref (individuals population)
+				     (find-best population comparator))))
+	      (when (< (raw-score (fitness best))
+		       (raw-score (fitness run-best)))
+		(setf run-best (copy best))
+		(setf new-best-p t))
+	      (output-generation generation population best 
+				 run-best new-best-p output streams))
+	 finally (return run-best)))))
 
 
 ;;;
@@ -125,32 +83,110 @@
     (:steady-state #'steady-state)
     (otherwise (error "Invalid generational model for core-gp engine."))))
 
-(defun generational (population parameters t-size cx-rate mt-rate node-rate config)
+(defun generational (population config)
   "Generational evolutionary iteration."
-  (let ((new-population (selection population t-size #'<)))
-    (apply-crossover new-population parameters)
-    (apply-mutation new-population parameters)
-    (evaluate-population new-population config)
+  (let* ((size (size population))
+	 (new-population 
+	  (loop 
+	     with new-individuals = (make-array size)
+	     for i from 0 below size
+	     do (setf (aref new-individuals i)
+		      (funcall (selection-operator (selection config)) 
+			       population (comparator (extra-configurations config))))
+	     finally (return (make-population :individuals new-individuals :size size)))))
+    (apply-crossover new-population config)
+    (apply-mutation new-population config)
+    (evaluate-population new-population (evaluation config))
     (setf population new-population)))
   
-(defun steady-state (population parameters t-size cx-rate mt-rate node-rate config)
+(defun steady-state (population config)
   "Steady state evolutionary iteration."
-  (loop for i from 1 to (size population) 
-     do (let ((offspring nil))
-	  (if (< (random 1.0) cx-rate)
-	      (let* ((parent1 (tournament t-size population #'<))
-		     (parent2 (tournament t-size population #'<)))
-		(setf offspring 
-		      (funcall (core-params-crossover parameters)
-			       (genome parent1) (genome parent2) parameters)))
-	      (progn
-		(setf offspring (tournament t-size population #'<))
-		(setf (genome offspring)
-		      (funcall (core-params-mutation parameters)
-			       offspring parameters))
-		(setf (eval-p offspring) nil)))
-	  (evaluate-individual offspring config)
-	  (setf (aref (individuals population) (index-tournament t-size population #'>))
-		(copy offspring)))))
- 
+  (let ((selection-fn (selection-operator (selection config)))
+	(comparator (comparator (extra-configurations config))))
+    (loop 
+       for i from 1 to (size population) 
+       do (let ((offspring nil))
+	    (if (< (random 1.0) (cx-rate (operators config)))
+		(let* ((parent1 (funcall selection-fn population comparator))
+		       (parent2 (funcall selection-fn population comparator)))
+		  (setf offspring 
+			(funcall (cx-operator (operators config)) 
+				 (genome parent1) (genome parent2) config)))
+		(progn
+		  (setf offspring (funcall selection-fn population comparator))
+		  (setf (genome offspring)
+			(funcall (mt-operator (operators config)) offspring config))
+		  (setf (eval-p offspring) nil)))
+	    (evaluate-individual offspring (evaluation config))
+	    (setf (aref (individuals population) 
+			(index-tournament population 2 (inverse-comparator 
+							(extra-configurations config))))
+		  (copy offspring))))))
+
+;; GA generic start function
+(defun ga-generic (&key (pop-size) (genome-type 'bit-genome) (genome-size 10)
+		   (evaluation-fn nil) (scaling-fn nil)
+		   (cx-operator #'one-point-crossover) (cx-rate 0.75)
+		   (mt-operator #'flip-mutation) (mt-rate 1.0) (mt-gene-rate 0.01)
+		   (selection '(tournament 3)) (replacement-mode :generational)
+		   (terminal-condition :generations) (terminal-value 10) 
+		   (elitism t) (stop nil) (optimum-solution nil)
+		   (id "ga") (output :screen) (comparator #'<))
+  "Configure and start a GA engine."
+  (let ((ga-config (make-core-config
+		    (make-linear-population-config pop-size genome-type genome-size)
+		    (make-operators-config :cx-operator cx-operator
+					   :cx-rate cx-rate
+					   :mt-operator mt-operator
+					   :mt-rate mt-rate
+					   :mt-gene-rate mt-gene-rate)
+		    (make-evaluation-config evaluation-fn scaling-fn)
+		    (make-selection-config (apply #'make-selection
+						  (first selection) (rest selection))
+					   replacement-mode elitism)
+		    (make-terminal-config terminal-condition 
+					  terminal-value stop 
+					  optimum-solution)
+		    (make-extra-config :comparator comparator))))
+    (open-output-streams ga-config output id)))
+
+;; GP generic start function
+(defun gp-generic (&key (pop-size) (fset-names nil) (tset-names nil)
+		   (size-type :depth) (initial-size 2) (maximum-size 5)
+		   (tree-generator #'ramped-half-and-half) 
+		   (evaluation-fn nil) (scaling-fn nil)
+		   (cx-operator #'tree-crossover) (cx-rate 0.9)
+		   (mt-operator #'point-mutation) (mt-rate 0.1) (mt-gene-rate 0.01)
+		   (selection '(tournament 3)) (replacement-mode :steady-state)
+		   (terminal-condition :generations) (terminal-value 10) 
+		   (elitism nil) (stop nil) (optimum-solution nil)
+		   (id "gp") (output :screen) (comparator #'<))
+  "Configure and start a GP engine."
+  (let ((gp-config (make-core-config
+		    (make-tree-population-config pop-size size-type initial-size maximum-size tree-generator)
+		    (make-operators-config :cx-operator cx-operator
+					   :cx-rate cx-rate
+					   :mt-operator mt-operator
+					   :mt-rate mt-rate
+					   :mt-gene-rate mt-gene-rate)
+		    (make-evaluation-config evaluation-fn scaling-fn)
+		    (make-selection-config (apply #'make-selection
+						  (first selection) (rest selection))
+					   replacement-mode elitism)
+		    (make-terminal-config terminal-condition 
+					  terminal-value stop 
+					  optimum-solution)
+		    (make-extra-config :comparator comparator
+				       :sets (make-sets-container fset-names tset-names)))))
+    (open-output-streams gp-config output id)))
+
+(defun open-output-streams (config output id)
+  (if (member output '(:files :screen+files))
+      (with-open-file (run-stream  (concatenate 'string id "-stats.txt")
+				   :direction :output :if-exists :supersede)
+	(with-open-file (best-stream (concatenate 'string id "-best.txt") 
+				     :direction :output :if-exists :supersede)
+	  (run-core config output (list run-stream best-stream))))
+      (run-core config output nil)))
+
 

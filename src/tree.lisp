@@ -1,4 +1,4 @@
-;(in-package #:core-gp)
+(in-package #:core-gp)
 
 ;;;
 ;;; tree utilities
