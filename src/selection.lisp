@@ -12,8 +12,8 @@
     (loop for n from 1 below tournament-size
        do (let ((current (aref population (random size))))
 	    (when (funcall comparator 
-			   (raw-score (fitness current)) 
-			   (raw-score (fitness best)))
+			   (fitness-score (fitness current)) 
+			   (fitness-score (fitness best)))
 	      (setf best (clone current)))) ; must be clone and not copy
        finally (return best))))
 
@@ -26,8 +26,8 @@
     (loop for n from 1 below tournament-size
        do (let ((index (random size)))
 	    (when (funcall comparator 
-			   (raw-score (fitness (aref population index))) 
-			   (raw-score (fitness best)))
+			   (fitness-score (fitness (aref population index))) 
+			   (fitness-score (fitness best)))
 	      (setf best (aref population index))
 	      (setf bindex index)))
        finally (return bindex))))
@@ -48,8 +48,8 @@
      with best = 0
      for i from 1 below (size population) 
      when (funcall comparator 
-		   (raw-score (fitness (aref pop i))) 
-		   (raw-score (fitness (aref pop best))))
+		   (fitness-score (fitness (aref pop i))) 
+		   (fitness-score (fitness (aref pop best))))
      do (setf best i)
      finally (return best)))
 

@@ -56,7 +56,7 @@
 (defmethod print-object ((object individual) stream)
   (print-unreadable-object (object stream :type t)
     (with-slots (id genome fitness eval-p) object
-      (format stream "id: ~a~% ~a~% fitness: ~a eval-p: ~a" id genome fitness eval-p)))) 
+      (format stream "id: ~a eval-p: ~a~%~a~%~a" id eval-p genome fitness)))) 
 
 
 ;;;

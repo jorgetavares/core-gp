@@ -13,15 +13,14 @@
     :accessor raw-score
     :documentation "Value obtained from the evaluation function.")
    (fitness-score
-    :initarg :fitness-score
     :accessor fitness-score
     :documentation "Scaled value of raw-score.")))
 
 (defmethod initialize-instance :after ((fitness fitness) &key scaling-function)
-  (setf (slot-value fitness 'fitness-score)
+  (setf (slot-value fitness 'fitness-score)   
 	(if scaling-function
-     	    (funcall scaling-function (slot-value fitness 'raw-score))
-	    nil)))
+	    (funcall scaling-function (slot-value fitness 'raw-score))
+	    (slot-value fitness 'raw-score))))
 
 (defun make-fitness (&key raw-score scaling-function)
   "Create an empty of filled fitness."
@@ -33,14 +32,9 @@
 	  (make-instance 'fitness :raw-score raw-score))
       (make-instance 'fitness)))
 
-(defgeneric copy (fitness)
-  (:documentation "Return a new identical object to fitness."))
-
 (defmethod copy ((fitness fitness))
-  (make-instance 'fitness 
-		 :raw-score (raw-score fitness)
-		 :fitness-score (fitness-score fitness)))
-
+  (let ((copy (make-instance 'fitness :raw-score (raw-score fitness))))
+    (setf (fitness-score copy) (fitness-score fitness)) copy))
 
 (defmethod print-object ((object fitness) stream)
   (print-unreadable-object (object stream :type t)
@@ -62,9 +56,10 @@
   (setf (raw-score fitness) raw-score))
 
 (defmethod set-fitness :after ((fitness fitness) raw-score (config evaluation-config))
-  (when (scaling-p config)
-    (setf (fitness-score fitness) 
-	  (funcall (scaling-function config) raw-score))))
+  (setf (fitness-score fitness) 
+	(if (scaling-p config)
+	    (funcall (scaling-function config) raw-score)
+	    raw-score)))
 
 ;; 
 ;; genome
