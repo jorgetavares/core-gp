@@ -33,7 +33,7 @@
 	   (inverse-comparator (inverse-comparator 
 				(extra-configurations config)))
 	   (population nil) 
-	   (best nil) (run-best nil) (new-best-p t)
+	   (run-best nil) (new-best-p t)
 	   (total-generations (if (eql (terminal-condition terminal-config) 
 				       :generations)
 				  (condition-value terminal-config)
@@ -47,28 +47,29 @@
 			  (terminals sets) (terminals-size sets)))
 		   (bit-genome
 		    (list (genome-size population-config)))
-		   (otherwise (error "run-core: no valid genome-type.")))))
+		   (otherwise (error "run-core: no valid genome-type."))))
+	   (stats (make-array total-generations 
+			      :initial-element (make-instance (stats-type extra-config)))))
       (reset-id)
       (setf population 
 	    (apply #'make-random-population (size population-config) genome-type args)) 
       (evaluate-population population evaluation-config)
-      (setf best (copy (aref (individuals population) (find-best population comparator))))
-      (setf run-best (copy best))
-      (output-generation 1 population best run-best new-best-p output streams)
+      (multiple-value-bind (new-run-best flag)
+	  (compute-stats (aref stats 0) 1 population (aref (individuals population) 0)
+			 new-best-p comparator)
+	(setf run-best new-run-best new-best-p flag))
+      (output-stats (aref stats 0) run-best new-best-p output streams)
       (loop for generation from 2 to total-generations
 	 do (progn
 	      (setf new-best-p nil)
 	      (funcall replacement-mode population config)
 	      (when (elitism-mode selection-config)
-		(elitism population best inverse-comparator))
-	      (setf best (copy (aref (individuals population)
-				     (find-best population comparator))))
-	      (when (funcall comparator (raw-score (fitness best))
-			     (raw-score (fitness run-best)))
-		(setf run-best (copy best))
-		(setf new-best-p t))
-	      (output-generation generation population best 
-				 run-best new-best-p output streams))
+		(elitism population run-best inverse-comparator))
+	      (multiple-value-bind (new-run-best flag)
+		  (compute-stats (aref stats (1- generation)) generation population
+				 run-best new-best-p comparator)
+		(setf run-best new-run-best new-best-p flag))
+	      (output-stats  (aref stats (1- generation)) run-best new-best-p output streams))
 	 finally (return run-best)))))
 
 
@@ -147,7 +148,8 @@
 		    (make-terminal-config terminal-condition 
 					  terminal-value stop 
 					  optimum-solution)
-		    (make-extra-config :comparator comparator))))
+		    (make-extra-config :comparator comparator 
+				       :stats-type 'fitness-stats))))
     (open-output-streams ga-config output id)))
 
 ;; GP generic start function
@@ -163,7 +165,8 @@
 		   (id "gp") (output :screen) (comparator #'<))
   "Configure and start a GP engine."
   (let ((gp-config (make-core-config
-		    (make-tree-population-config pop-size size-type initial-size maximum-size tree-generator)
+		    (make-tree-population-config pop-size size-type 
+						 initial-size maximum-size tree-generator)
 		    (make-operators-config :cx-operator cx-operator
 					   :cx-rate cx-rate
 					   :mt-operator mt-operator
@@ -177,8 +180,10 @@
 					  terminal-value stop 
 					  optimum-solution)
 		    (make-extra-config :comparator comparator
-				       :sets (make-sets-container fset-names tset-names)))))
+				       :sets (make-sets-container fset-names tset-names)
+				       :stats-type 'fitness-stats))))
     (open-output-streams gp-config output id)))
+
 
 (defun open-output-streams (config output id)
   (if (member output '(:files :screen+files))

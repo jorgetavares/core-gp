@@ -64,18 +64,23 @@
    (sets 
     :initarg :sets :initform nil
     :reader sets 
-    :documentation "Function and Terminal Sets for GP algorithms.")))
+    :documentation "Function and Terminal Sets for GP algorithms.")
+   (stats-type
+    :initarg :stats-type :initform 'fitness-stats
+    :reader stats-type
+    :documentation "The type of statistics to collect.")))
 
 (defmethod initialize-instance :after ((config extra-config) &key)
   (if (eql (slot-value config 'comparator) #'<)
       (setf (slot-value config 'inverse-comparator) #'>)
       (setf (slot-value config 'inverse-comparator) #'<)))
 
-(defun make-extra-config (&key comparator sets)
+(defun make-extra-config (&key comparator sets stats-type)
   "Return a configuration of extra elements."
   (make-instance 'extra-config 
 		 :comparator comparator
-		 :sets sets))
+		 :sets sets
+		 :stats-type stats-type))
 
 
 ;;

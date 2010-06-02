@@ -25,8 +25,8 @@
 						       "src/configuration"))
 	       (:file "src/utilities"     :depends-on ("src/package" 
 						       "src/individual"))
-	       (:file "src/output"        :depends-on ("src/package" 
-						       "src/utilities"))
+	       (:file "src/stats"         :depends-on ("src/package" 
+						       "src/evaluation"))
 	       (:file "src/core"          :depends-on ("src/package" 
 						       "src/sets" 
 						       "src/tree" 
@@ -37,5 +37,5 @@
 						       "src/crossover"
 						       "src/mutation"
 						       "src/utilities"
-						       "src/output"))))
+						       "src/stats"))))
 						    
