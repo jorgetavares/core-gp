@@ -103,7 +103,7 @@
 ;;; run GP
 ;;;
 
-(defun gp-sin (&key (id "gp-sin") (output :screen) (pop-size 1000) (generations 10))
+(defun gp-sin (&key (id "gp-sin") (output :screen) (pop-size 1000) (generations 100))
   (core-gp:gp-generic :id id
 		      :output output
 		      :pop-size pop-size

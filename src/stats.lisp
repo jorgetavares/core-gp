@@ -70,6 +70,9 @@
 ;;
 ;; methods
 
+(defgeneric compute-stats (stats iteration population run-best new-best-p comparator)
+  (:documentation "Compute the sstatistics for a given iteration."))
+
 (defmethod compute-stats ((stats fitness-stats) iteration population 
 			  run-best new-best-p comparator)
   "Compute for the given iteration the fitness stats."
@@ -128,33 +131,87 @@
     (values run-best new-best-p)))
 
 
-(defmethod output-stats ((stats fitness-stats) run-best new-best-p output streams)
-  "Outputs the computed stats according to the type of output."
-  (unless (eql output :none)
-    (when (member output '(:screen :screen+files))
-      (format t "generation ~a~%raw: ~a ~a ~a ~a ~a ~a~%fit: ~a ~a ~a ~a ~a ~a~%" 
-	      (iteration stats) 
-	      (run-best-raw-score stats) (best-raw-score stats) (worst-raw-score stats)
-	      (mean-raw-score stats) (median-raw-score stats) (deviation-raw-score stats)
-	      (run-best-fitness-score stats) (best-fitness-score stats) 
-	      (worst-fitness-score stats) (mean-fitness-score stats) 
-	      (median-fitness-score stats) (deviation-fitness-score stats)))
-    (when (member output '(:files :screen+files))
-      (format (first streams) "generation ~a~%raw: ~a ~a ~a ~a ~a ~a~%fit: ~a ~a ~a ~a ~a ~a~%" 
-	      (iteration stats) 
-	      (run-best-raw-score stats) (best-raw-score stats) (worst-raw-score stats)
-	      (mean-raw-score stats) (median-raw-score stats) (deviation-raw-score stats)
-	      (run-best-fitness-score stats) (best-fitness-score stats) 
-	      (worst-fitness-score stats) (mean-fitness-score stats) 
-	      (median-fitness-score stats) (deviation-fitness-score stats))
-      (when new-best-p
-	(format (second streams) "~a ~%" (list (iteration stats) run-best))))))
-
-
 ;;;
 ;;; structural stats
 ;;;
 
+(defclass tree-stats (fitness-stats)
+  ((mean-depth
+    :initarg :mean-depth :initform nil
+    :accessor mean-depth
+    :documentation "Population's mean tree depth.")
+   (deviation-depth
+    :initarg :deviation-depth :initform nil
+    :accessor deviation-depth
+    :documentation "Population's standard deviation tree depth.")
+   (mean-nodes-count
+    :initarg :mean-nodes-count :initform nil
+    :accessor mean-nodes-count
+    :documentation "Population's mean tree nodes count.")
+   (deviation-nodes-count
+    :initarg :deviation-nodes-count :initform nil
+    :accessor deviation-nodes-count
+    :documentation "Population's standard deviation tree nodes count.")
+   (run-best-depth
+    :initarg :run-best-depth :initform nil
+    :accessor run-best-depth
+    :documentation "The tree depth of the run-best individual.")
+   (run-best-nodes-count
+    :initarg :run-best-nodes-count :initform nil
+    :accessor run-best-nodes-count
+    :documentation "The tree nodes count of the run-best individual.")
+   (best-depth
+    :initarg :best-depth :initform nil
+    :accessor best-depth
+    :documentation "The tree depth of the current iteration best individual.")
+   (best-nodes-count
+    :initarg :best-nodes-count :initform nil
+    :accessor best-nodes-count
+    :documentation "The tree nodes count of the current iteration best individual.")
+   (worst-depth
+    :initarg :worst-depth :initform nil
+    :accessor worst-depth
+    :documentation "The tree depth of the current iteration worst individual.")
+   (worst-nodes-count
+    :initarg :worst-nodes-count :initform nil
+    :accessor worst-nodes-count
+    :documentation "The tree nodes count of the current iteration worst individual.")
+   ))
+
+;;
+;; methods
+
+(defmethod compute-stats ((stats tree-stats) iteration population 
+			  run-best new-best-p comparator)
+  "Compute for the given iteration the fitness+stree stats."
+  (multiple-value-bind (run-best new-best-p)
+      (call-next-method)
+    (let* ((size (size population)) 
+	   (depth-mean 0) (nodes-mean 0)
+	   (depth-deviation 0) (nodes-deviation 0)
+	   (best (aref (individuals population) 0)) 
+	   (worst (aref (individuals population) (1- size))))
+       (loop for individual across (individuals population)
+	  sum (tree-depth (genome individual)) into depth-total
+	  sum (nodes-count (genome individual)) into nodes-total
+	  finally (setf depth-mean (/ depth-total size)
+			nodes-mean (/ nodes-total size)))
+       (loop for individual across (individuals population)
+	  sum (expt (- (tree-depth (genome individual)) depth-mean) 2) into depth-total
+	  sum (expt (- (nodes-count (genome individual)) nodes-mean) 2) into nodes-total
+	  finally (setf depth-deviation (sqrt (/ depth-total size))
+			nodes-deviation (sqrt (/ nodes-total size))))
+       (setf (mean-depth stats) (float depth-mean)
+	     (deviation-depth stats) (float depth-deviation)
+	     (mean-nodes-count stats) (float nodes-mean)
+	     (deviation-nodes-count stats) (float nodes-deviation)
+	     (run-best-depth stats) (float (tree-depth (genome run-best)))
+	     (run-best-nodes-count stats) (float (nodes-count (genome run-best)))
+	     (best-depth stats) (float (tree-depth (genome best)))
+	     (best-nodes-count stats) (float (nodes-count (genome best)))
+	     (worst-depth stats) (float (tree-depth (genome worst)))
+	     (worst-nodes-count stats) (float (nodes-count (genome worst))))
+       (values run-best new-best-p))))
 
 
 ;;;

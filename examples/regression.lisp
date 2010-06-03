@@ -17,7 +17,9 @@
 (defun int-constants (min max)
   #'(lambda ()
       (+ min (random (1+ (- max min))))))
+
 (setf core-gp:*generate-constant* (int-constants -5 5))
+
 
 ;; functions and terminals
 (defparameter *fset* '(gp-plus gp-minus gp-times gp-division))

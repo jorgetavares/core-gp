@@ -13,20 +13,30 @@
 	       (:file "src/tree"          :depends-on ("src/package" 
 						       "src/sets"))
 	       (:file "src/individual"    :depends-on ("src/package" 
-							"src/tree"))
+						       "src/tree"))
 	       (:file "src/configuration" :depends-on ("src/package"
 						       "src/individual"))
 	       (:file "src/evaluation"    :depends-on ("src/package" 
 						       "src/configuration"))
 	       (:file "src/selection"     :depends-on ("src/package"))
+	    
 	       (:file "src/crossover"     :depends-on ("src/package"
 						       "src/configuration"))
 	       (:file "src/mutation"      :depends-on ("src/package" 
 						       "src/configuration"))
+	       (:file "src/replacement"   :depends-on ("src/package"
+						       "src/individual"
+						       "src/configuration"
+						       "src/evaluation"
+						       "src/selection"
+						       "src/crossover"
+						       "src/mutation"))
 	       (:file "src/utilities"     :depends-on ("src/package" 
 						       "src/individual"))
 	       (:file "src/stats"         :depends-on ("src/package" 
 						       "src/evaluation"))
+	       (:file "src/output"        :depends-on ("src/package" 
+						       "src/stats"))
 	       (:file "src/core"          :depends-on ("src/package" 
 						       "src/sets" 
 						       "src/tree" 
@@ -34,8 +44,10 @@
 						       "src/configuration"
 						       "src/evaluation"
 						       "src/selection"
+						       "src/replacement"
 						       "src/crossover"
 						       "src/mutation"
 						       "src/utilities"
-						       "src/stats"))))
+						       "src/stats"
+						       "src/output"))))
 						    
