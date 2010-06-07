@@ -1,10 +1,9 @@
 ;;;;
-;;;; core-gp example: onemax
+;;;; core-gp example: ninemax
 ;;;;
 
 (in-package #:core-gp-examples)
 
-;(declaim (optimize (speed 3) (debug 0) (safety 1)))
 
 ;;;
 ;;; fitness function
@@ -21,15 +20,15 @@
 
 
 ;;;
-;;; run GP
+;;; run GA
 ;;;
 
-(defun ninemax (&key (id "ga-onemax") (output :screen) (pop-size 80) (genome-size 10) 
+(defun ninemax (&key (id "ga-ninemax") (output :screen) (pop-size 80) (genome-size 10) 
 	       (generations 20))
   (core-gp:ga-generic :id id
 		      :output output
 		      :pop-size pop-size
-		      :genome-type 'core-gp::integer-genome
+		      :genome-type 'integer-genome
 		      :genome-size genome-size
 		      :evaluation-fn #'sum-nines
 		      :scaling-fn (linear-scaling (* genome-size 9))

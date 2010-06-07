@@ -124,6 +124,10 @@
 		    (list (genome-size population-config)
 			  (lower-bound extra-config)
 			  (upper-bound extra-config)))
+		   (permutation-genome
+		    (list (genome-size population-config)
+			  (lower-bound extra-config)
+			  (upper-bound extra-config)))
 		   (otherwise (error "run-core: no valid genome-type."))))
 	   (stats (make-array total-generations 
 			      :initial-element (make-instance (stats-type extra-config)))))

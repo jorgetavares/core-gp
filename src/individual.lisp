@@ -102,6 +102,9 @@
 (defclass integer-genome (linear-genome)
   ())
 
+(defclass permutation-genome (integer-genome)
+  ())
+
 
 ;;;
 ;;; genome builders
@@ -125,6 +128,11 @@
 (defun make-integer-genome (chromossome size)
   (make-instance 'integer-genome
 		 :chromossome chromossome :size size))
+
+(defun make-permutation-genome (chromossome size)
+  (make-instance 'permutation-genome
+		 :chromossome chromossome :size size))
+
 
 ;;
 ;; methods
@@ -156,6 +164,16 @@
 		      :initial-contents (loop repeat size 
 					   collect (bound-random min max)))
 	  (size new-genome) size) new-genome))
+
+(defmethod make-random-genome ((new-genome integer-genome) size &rest args)
+  (destructuring-bind (min max) args
+    (setf (chromossome new-genome)
+	  (make-random-permutation
+	   (make-array size
+		       :element-type 'fixnum
+		       :initial-contents (loop for n from min to max collect n)) size)
+	  (size new-genome) size) new-genome))
+
 	
 ;;;
 ;;; methods
@@ -168,6 +186,11 @@
 
 (defmethod copy ((genome integer-genome))
   (make-instance 'integer-genome
+		 :chromossome (copy-array (chromossome genome))
+		 :size (size genome)))
+
+(defmethod copy ((genome permutation-genome))
+  (make-instance 'permutation-genome
 		 :chromossome (copy-array (chromossome genome))
 		 :size (size genome)))
 

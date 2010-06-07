@@ -61,6 +61,7 @@
 	   #:steady-state
 	   #:apply-crossover ;; crossover.lisp
 	   #:one-point-crossover
+	   #:uniform-crossover
 	   #:tree-crossover
 	   #:fitness ;; evaluation.lisp
 	   #:raw-score
@@ -88,10 +89,12 @@
 	   #:size
 	   #:bit-genome
 	   #:integer-genome
+	   #:permutation-genome
 	   #:make-empty-genome
 	   #:make-bit-genome
 	   #:make-tree-genome
 	   #:make-integer-genome
+	   #:make-permutation-genome
 	   #:make-random-genome
 	   #:population
 	   #:individuals
@@ -114,6 +117,7 @@
 	   #:grow-method-depth
 	   #:copy-array ;; utilities.lisp
 	   #:bound-random
+	   #:make-random-permutation
 	   #:stats ;; stats.lisp
 	   #:iteration
 	   #:fitness-stats

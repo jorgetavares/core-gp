@@ -46,7 +46,6 @@
 		 'individual 
 		 :id (generate-id) :genome (make-integer-genome o2 size))))))
 
-
 (defun cross-chromossomes (c1 c2 size)
   (let ((cut-point (random size))
 	(o1 (copy-array c1))
@@ -56,7 +55,97 @@
 	    (setf (aref o1 index) (aref c2 index))
 	    (setf (aref o2 index) (aref c1 index)))
        finally (return (values o1 o2)))))
-       
+
+
+
+(defgeneric uniform-crossover (genome1 genome2 config)
+  (:documentation "Uniform crossover operator."))
+
+(defmethod uniform-crossover ((genome1 bit-genome) (genome2 bit-genome) config)
+  (let ((size (genome-size (population config))))
+    (multiple-value-bind (o1 o2)
+	(uniform-cross-chromossomes (chromossome genome1) (chromossome genome2) size)
+      (values (make-instance
+	       'individual 
+	       :id (generate-id) :genome (make-bit-genome o1 size))
+	      (make-instance 
+	       'individual 
+	       :id (generate-id) :genome (make-bit-genome o2 size))))))
+ 
+(defmethod uniform-crossover ((genome1 integer-genome) (genome2 integer-genome) config)
+  (let ((size (genome-size (population config))))
+    (multiple-value-bind (o1 o2)
+	(uniform-cross-chromossomes (chromossome genome1) (chromossome genome2) size)
+      (values (make-instance
+	       'individual 
+	       :id (generate-id) :genome (make-integer-genome o1 size))
+	      (make-instance 
+	       'individual 
+	       :id (generate-id) :genome (make-integer-genome o2 size))))))
+
+(defun uniform-cross-chromossomes (c1 c2 size)
+   (let ((o1 (copy-array c1))
+	 (o2 (copy-array c2)))
+     (loop for g1 across c1 and g2 across c2
+	for i from 0 below size
+	when (< (random 1.0) 0.5) 
+	do (progn
+	     (setf (aref o2 i) c1)
+	     (setf (aref o1 i) c2))
+	finally (return (values o1 o2)))))
+
+
+;; order-based uniform cx
+
+(defmethod uniform-crossover ((genome1 permutation-genome) (genome2 permutation-genome) config)
+  (let ((size (genome-size (population config))))
+    (multiple-value-bind (o1 o2)
+	(uniform-order-cross (chromossome genome1) (chromossome genome2) size)
+      (values (make-instance
+	       'individual 
+	       :id (generate-id) :genome (make-permutation-genome o1 size))
+	      (make-instance 
+	       'individual 
+	       :id (generate-id) :genome (make-permutation-genome o2 size))))))
+
+(defun filter-genes (genes parent)
+  (loop for gene across parent
+	unless (member gene genes)
+	collect gene into new-genes
+	finally (return new-genes)))
+
+(defun uniform-order-cross (parent1 parent2 size)
+  (let ((offspring1 (make-array size
+				:initial-contents
+				(loop repeat size collect -1) 
+				:element-type
+				(array-element-type parent1)))
+	(offspring2 (make-array size 
+				:initial-contents
+				(loop repeat size collect -1)
+				:element-type
+				(array-element-type parent2))))
+    (loop for p1 across parent1 and p2 across parent2
+       for i from 0 below size
+       if (< (random 1.0) 0.5) 
+       do (progn
+	    (setf (aref offspring1 i) p1)
+	    (setf (aref offspring2 i) p2))
+       and collect p1 into genes1 and collect p2 into genes2
+       finally (let ((genes-fill1 (filter-genes genes1 parent2))
+		     (genes-fill2 (filter-genes genes2 parent1)))
+		 (loop for g across offspring1
+		    for j from 0 below size
+		    when (= g -1) do (progn
+				       (setf (aref offspring1 j) (first genes-fill1))
+				       (setf genes-fill1 (rest genes-fill1))))
+		 (loop for g across offspring2
+		    for j from 0 below size
+		    when (= g -1) do (progn
+				       (setf (aref offspring2 j) (first genes-fill2))
+				       (setf genes-fill2 (rest genes-fill2))))
+		 (return (values offspring1 offspring2))))))
+
 
 ;;;
 ;;; GP operators

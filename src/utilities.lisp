@@ -16,4 +16,12 @@
   "Return a random number between min and max."
   (+ min (random (1+ (- max min)))))
 
+(defun make-random-permutation (sequence size)
+  "Generate a random permutation from an ordered sequence."
+  (loop for i from 0 below size
+     do (let* ((position (truncate (+ i (* (- size i) (random 1.0)))))
+	       (value (aref sequence position))) 
+	  (setf (aref sequence position) (aref sequence i))
+	  (setf (aref sequence i) value))
+     finally (return sequence)))
 

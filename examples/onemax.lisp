@@ -4,8 +4,6 @@
 
 (in-package #:core-gp-examples)
 
-;(declaim (optimize (speed 3) (debug 0) (safety 1)))
-
 ;;;
 ;;; fitness function
 ;;;
@@ -21,7 +19,7 @@
 
 
 ;;;
-;;; run GP
+;;; run GA
 ;;;
 
 (defun onemax (&key (id "ga-onemax") (output :screen) (pop-size 80) (genome-size 20) 
