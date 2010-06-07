@@ -99,6 +99,9 @@
 (defclass bit-genome (linear-genome)
   ())
 
+(defclass integer-genome (linear-genome)
+  ())
+
 
 ;;;
 ;;; genome builders
@@ -116,7 +119,12 @@
 
 (defun make-tree-genome (tree depth nodes-count)
   (make-instance 'tree-genome 
-		 :chromossome tree :tree-depth depth :nodes-count nodes-count))
+		 :chromossome tree 
+		 :tree-depth depth :nodes-count nodes-count))
+
+(defun make-integer-genome (chromossome size)
+  (make-instance 'integer-genome
+		 :chromossome chromossome :size size))
 
 ;;
 ;; methods
@@ -140,12 +148,26 @@
 		    :initial-contents (loop repeat size collect (random 2)))
 	(size new-genome) size) new-genome)
 
+(defmethod make-random-genome ((new-genome integer-genome) size &rest args)
+  (destructuring-bind (min max) args
+    (setf (chromossome new-genome)
+	  (make-array size
+		      :element-type 'fixnum
+		      :initial-contents (loop repeat size 
+					   collect (bound-random min max)))
+	  (size new-genome) size) new-genome))
+	
 ;;;
 ;;; methods
 ;;;
 
 (defmethod copy ((genome bit-genome))
   (make-instance 'bit-genome
+		 :chromossome (copy-array (chromossome genome))
+		 :size (size genome)))
+
+(defmethod copy ((genome integer-genome))
+  (make-instance 'integer-genome
 		 :chromossome (copy-array (chromossome genome))
 		 :size (size genome)))
 

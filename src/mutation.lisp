@@ -33,6 +33,30 @@
 		  (if (= gene 1) 0 1))))
     genome))
 
+(defmethod flip-mutation ((genome integer-genome) config)
+  (let ((gene-rate (mt-gene-rate (operators config)))
+	(chromossome (chromossome genome))
+	(min (lower-bound (extra-configurations config)))
+	(max (upper-bound (extra-configurations config))))
+    (loop for index from 0 below (size genome)
+       when (< (random 1.0) gene-rate)
+       do (setf (aref chromossome index)
+		(bound-random min max)))
+    genome))
+
+
+(defgeneric swap-mutation (genome config)
+  (:documentation "Swaps two genes."))
+
+(defmethod swap-mutation ((genome integer-genome) config)
+  (let ((chromossome (chromossome genome))
+	(gene1 (random (size genome)))
+	(gene2 (random (size genome))))
+    (let ((allele1 (aref chromossome gene1)))
+      (setf (aref chromossome gene1) (aref chromossome gene2)
+	    (aref chromossome gene2) allele1))
+    genome))
+
 
 ;;;
 ;;; GP operators

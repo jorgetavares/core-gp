@@ -27,7 +27,7 @@
 		   (selection '(tournament 3)) (replacement-mode :generational)
 		   (terminal-condition :generations) (terminal-value 10) 
 		   (elitism t) (stop nil) (optimum-solution nil)
-		   (id "ga") (output :screen) (comparator #'<))
+		   (id "ga") (output :screen) (comparator #'<) (lower 0) (upper 9))
   "Configure and start a GA engine."
   (let ((ga-config (make-core-config
 		    (make-linear-population-config pop-size genome-type genome-size)
@@ -44,7 +44,9 @@
 					  terminal-value stop 
 					  optimum-solution)
 		    (make-extra-config :comparator comparator 
-				       :stats-type 'fitness-stats))))
+				       :stats-type 'fitness-stats
+				       :lower-bound lower
+				       :upper-bound upper))))
     (open-output-streams ga-config output id)))
 
 ;; GP generic start function
@@ -101,12 +103,10 @@
     (let* ((genome-type (genome-type population-config))
 	   (replacement-mode (select-replacement-mode 
 			      (replacement selection-config)))
-   	   (sets (sets extra-config))
-	   (comparator (comparator (extra-configurations config)))
+   	   (comparator (comparator (extra-configurations config)))
 	   (inverse-comparator (inverse-comparator 
 				(extra-configurations config)))
-	   (population nil) 
-	   (run-best nil) (new-best-p t)
+	   (population nil) (run-best nil) (new-best-p t)
 	   (total-generations (if (eql (terminal-condition terminal-config) 
 				       :generations)
 				  (condition-value terminal-config)
@@ -116,10 +116,14 @@
 		   (tree-genome 
 		    (list (initial-size population-config) 
 			  (tree-generator population-config)
-			  (functions sets) (functions-size sets)
-			  (terminals sets) (terminals-size sets)))
+			  (functions (sets extra-config)) (functions-size (sets extra-config))
+			  (terminals (sets extra-config)) (terminals-size (sets extra-config))))
 		   (bit-genome
 		    (list (genome-size population-config)))
+		   (integer-genome
+		    (list (genome-size population-config)
+			  (lower-bound extra-config)
+			  (upper-bound extra-config)))
 		   (otherwise (error "run-core: no valid genome-type."))))
 	   (stats (make-array total-generations 
 			      :initial-element (make-instance (stats-type extra-config)))))

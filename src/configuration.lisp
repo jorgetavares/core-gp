@@ -61,27 +61,36 @@
    (inverse-comparator
     :reader inverse-comparator
     :documentation "The opposite of the comparator.")
+   (stats-type
+    :initarg :stats-type :initform 'fitness-stats
+    :reader stats-type
+    :documentation "The type of statistics to collect.")
    (sets 
     :initarg :sets :initform nil
     :reader sets 
     :documentation "Function and Terminal Sets for GP algorithms.")
-   (stats-type
-    :initarg :stats-type :initform 'fitness-stats
-    :reader stats-type
-    :documentation "The type of statistics to collect.")))
+   (lower-bound
+    :initarg :lower-bound :initform 0
+    :accessor lower-bound
+    :documentation "Minimum value for a gene (allele).")
+   (upper-bound
+    :initarg :upper-bound :initform 9
+    :accessor upper-bound
+    :documentation "Maximum value for a gene (allele).")))
 
 (defmethod initialize-instance :after ((config extra-config) &key)
   (if (eql (slot-value config 'comparator) #'<)
       (setf (slot-value config 'inverse-comparator) #'>)
       (setf (slot-value config 'inverse-comparator) #'<)))
 
-(defun make-extra-config (&key comparator sets stats-type)
+(defun make-extra-config (&key comparator stats-type sets lower-bound upper-bound)
   "Return a configuration of extra elements."
   (make-instance 'extra-config 
 		 :comparator comparator
+		 :stats-type stats-type
 		 :sets sets
-		 :stats-type stats-type))
-
+		 :lower-bound lower-bound
+		 :upper-bound upper-bound))
 
 ;;
 ;; population configuration

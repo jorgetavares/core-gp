@@ -11,5 +11,6 @@
   :depends-on (core-gp)  
   :components ((:file "examples/package")
 	       (:file "examples/onemax"       :depends-on ("examples/package"))
+	       (:file "examples/ninemax"      :depends-on ("examples/package"))
                (:file "examples/regression"   :depends-on ("examples/package"))
 	       (:file "examples/sin-function" :depends-on ("examples/package"))))

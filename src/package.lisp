@@ -12,6 +12,8 @@
 	   #:comparator
 	   #:inverse-comparator
 	   #:sets
+	   #:lower-bound
+	   #:upper-bound
 	   #:make-extra-config
 	   #:population-config
 	   #:size
@@ -54,7 +56,7 @@
 	   #:gp-generic
 	   #:open-output-streams
 	   #:run-core
-	   #:select-replacement-mode
+	   #:select-replacement-mode ;; replacement.lisp
 	   #:generational
 	   #:steady-state
 	   #:apply-crossover ;; crossover.lisp
@@ -65,6 +67,7 @@
 	   #:fitness-score
 	   #:make-fitness
 	   #:copy
+	   #:print-object
 	   #:set-fitness
 	   #:evaluate-genome
 	   #:evaluate-individual
@@ -84,9 +87,11 @@
 	   #:linear-genome
 	   #:size
 	   #:bit-genome
+	   #:integer-genome
 	   #:make-empty-genome
 	   #:make-bit-genome
 	   #:make-tree-genome
+	   #:make-integer-genome
 	   #:make-random-genome
 	   #:population
 	   #:individuals
@@ -94,8 +99,9 @@
 	   #:make-random-population
 	   #:apply-mutation ;; mutation.lisp
 	   #:flip-mutation
+	   #:swap-mutation
 	   #:point-mutation
-	   #:output-generation ;; output.lisp
+	   #:output-stats ;; output.lisp
 	   #:tournament ;; selection.lisp
 	   #:index-tournament
 	   #:make-selection
@@ -107,7 +113,34 @@
 	   #:full-method-depth
 	   #:grow-method-depth
 	   #:copy-array ;; utilities.lisp
-	   #:average-fitness
+	   #:bound-random
+	   #:stats ;; stats.lisp
+	   #:iteration
+	   #:fitness-stats
+	   #:run-best-raw-score
+	   #:run-best-fitness-score
+	   #:best-raw-score
+	   #:best-fitness-score
+	   #:worst-raw-score
+	   #:worst-fitness-score
+	   #:mean-raw-score
+	   #:median-raw-score
+	   #:deviation-raw-score
+	   #:mean-fitness-score
+	   #:median-fitness-score
+	   #:deviation-fitness-score
+	   #:compute-stats
+	   #:tree-stats
+	   #:mean-depth
+	   #:deviation-depth
+	   #:mean-nodes-count
+	   #:deviation-nodes-count
+	   #:run-best-depth
+	   #:run-best-nodes-count
+	   #:best-depth
+	   #:best-nodes-count
+	   #:worst-depth
+	   #:worst-nodes-count
 	   #:sets-container ;; sets.lisp
 	   #:functions
 	   #:terminals

@@ -12,4 +12,8 @@
 		 :displaced-to array) 
      dimensions)))
 
+(defun bound-random (min max)
+  "Return a random number between min and max."
+  (+ min (random (1+ (- max min)))))
+
 
