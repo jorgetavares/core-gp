@@ -73,6 +73,7 @@
 	   #:evaluate-genome
 	   #:evaluate-individual
 	   #:evaluate-population
+	   #:linear-scaling
 	   #:individual ;; individual.lisp
 	   #:id
 	   #:genome

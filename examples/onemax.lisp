@@ -2,7 +2,12 @@
 ;;;; core-gp example: onemax
 ;;;;
 
-(in-package #:core-gp-examples)
+(defpackage #:core-gp-onemax
+  (:use #:common-lisp #:core-gp)
+  (:export #:onemax #:count-ones))
+
+(in-package #:core-gp-onemax)
+
 
 ;;;
 ;;; fitness function
@@ -11,11 +16,6 @@
 (defun count-ones (candidate-solution)
   "Sum all bits in the vector. Optimal solution equals all ones."
   (loop for bit across candidate-solution sum bit))
-
-(defun linear-scaling (max-size)
-  "Scales the raw fitness between 0 and 1."
-  #'(lambda (raw-fitness)
-      (/ raw-fitness max-size)))
 
 
 ;;;

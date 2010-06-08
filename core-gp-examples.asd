@@ -8,10 +8,9 @@
   :version "0.1"  
   :author "Jorge Tavares <jorge.tavares@ieee.org>"  
   :licence "MIT"
-  :depends-on (core-gp)  
-  :components ((:file "examples/package")
-	       (:file "examples/onemax"       :depends-on ("examples/package"))
-	       (:file "examples/ninemax"      :depends-on ("examples/package"))
-	       (:file "examples/tsp"          :depends-on ("examples/package"))
-               (:file "examples/regression"   :depends-on ("examples/package"))
-	       (:file "examples/sin-function" :depends-on ("examples/package"))))
+  :depends-on (core-gp cl-tsplib)  
+  :components ((:file "examples/onemax")
+	       (:file "examples/ninemax")
+	       (:file "examples/tsp")
+               (:file "examples/regression")
+	       (:file "examples/sin-function")))

@@ -2,21 +2,20 @@
 ;;;; core-gp example: tsp
 ;;;;
 
-(in-package #:core-gp-examples)
-(use-package :cl-tsplib)
+(defpackage #:core-gp-tsp
+  (:use #:common-lisp #:core-gp #:cl-tsplib)
+  (:export #:tsp 
+	   #:make-tsp-fitness 
+	   #:*tsp-tsp-instance-filename*))
+
+(in-package #:core-gp-tsp)
+
 
 ;;;
 ;;; fitness function
 ;;;
 
-(defparameter *eil51*   "/Users/jast/workspace/datasets/tsplib/tsp/eil51.tsp")
-(defparameter *burma14* "/Users/jast/workspace/datasets/tsplib/tsp/burma14.tsp")
-(defparameter *kroA100* "/Users/jast/workspace/datasets/tsplib/tsp/kroA100.tsp")
-(defparameter *d198*    "/Users/jast/workspace/datasets/tsplib/tsp/d198.tsp")
-(defparameter *lin318*  "/Users/jast/workspace/datasets/tsplib/tsp/lin318.tsp")
-(defparameter *pcb442*  "/Users/jast/workspace/datasets/tsplib/tsp/pcb442.tsp")
-
-(defparameter *tsp-instance-filename* *burma14*)
+(defparameter *tsp-instance-filename* cl-tsplib:*burma14*)
 
 (defun make-tsp-fitness (distances size)
   "Computes the length of a symmetric tsp route for a given instance."

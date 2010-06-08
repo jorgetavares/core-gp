@@ -2,7 +2,20 @@
 ;;;; core-gp example: symbolic regression
 ;;;;
 
-(in-package #:core-gp-examples)
+(defpackage #:core-gp-regression
+  (:use #:common-lisp #:core-gp)
+  (:export #:regression 
+	   #:var-x
+	   #:int-constants
+	   #:make-fitness-regression
+	   #:*X*
+	   #:*fset*
+	   #:*tset*
+	   #:*fitness-cases*
+	   #:*x-points*
+	   #:*y-points*))
+
+(in-package #:core-gp-regression)
 
 
 ;;;
@@ -17,8 +30,6 @@
 (defun int-constants (min max)
   #'(lambda ()
       (+ min (random (1+ (- max min))))))
-
-(setf core-gp:*generate-constant* (int-constants -5 5))
 
 
 ;; functions and terminals
@@ -50,6 +61,7 @@
 ;;;
 
 (defun regression (&key (id "gp-regression") (output :screen) (pop-size 600) (generations 10))
+  (setf core-gp:*generate-constant* (int-constants -5 5))
   (core-gp:gp-generic :id id
 		      :output output
 		      :pop-size pop-size

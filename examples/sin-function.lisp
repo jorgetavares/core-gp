@@ -2,7 +2,20 @@
 ;;;; core-gp example: sin function example (see tinygp code for more info)
 ;;;;
 
-(in-package #:core-gp-examples)
+(defpackage #:core-gp-sin
+  (:use #:common-lisp #:core-gp)
+  (:export #:gp-sin
+	   #:var-x
+	   #:real-constants
+	   #:make-fitness-regression
+	   #:*X*
+	   #:*fset*
+	   #:*tset*
+	   #:*sin-data-points*
+	   #:*data-points*))
+
+(in-package #:core-gp-sin)
+
 
 ;;;
 ;;; function and terminal sets
@@ -16,11 +29,13 @@
 (defun real-constants (min max)
   #'(lambda ()
       (+ min (random (float (1+ (- max min)))))))
-(setf core-gp:*generate-constant* (real-constants -5 5))
+
 
 ;; functions and terminals
 (defparameter *fset* '(gp-plus gp-minus gp-times gp-division))
+
 (defparameter *tset* '(gp-constant var-x))
+
 
 ;;;
 ;;; fitness function ( y = f(x) = sin (x) )
@@ -104,6 +119,7 @@
 ;;;
 
 (defun gp-sin (&key (id "gp-sin") (output :screen) (pop-size 1000) (generations 100))
+  (setf core-gp:*generate-constant* (real-constants -5 5))
   (core-gp:gp-generic :id id
 		      :output output
 		      :pop-size pop-size

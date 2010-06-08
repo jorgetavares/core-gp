@@ -2,7 +2,11 @@
 ;;;; core-gp example: ninemax
 ;;;;
 
-(in-package #:core-gp-examples)
+(defpackage #:core-gp-ninemax
+  (:use #:common-lisp #:core-gp)
+  (:export #:ninemax #:sum-nines))
+
+(in-package #:core-gp-ninemax)
 
 
 ;;;
@@ -12,11 +16,6 @@
 (defun sum-nines (candidate-solution)
   "Sum all bits in the vector. Optimal solution equals all ones."
   (loop for number across candidate-solution sum number))
-
-(defun linear-scaling (max-size)
-  "Scales the raw fitness between 0 and 1."
-  #'(lambda (raw-fitness)
-      (/ raw-fitness max-size)))
 
 
 ;;;

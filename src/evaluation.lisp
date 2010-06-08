@@ -91,3 +91,13 @@
 (defmethod evaluate-population ((population population) (config evaluation-config))
   (loop for individual across (individuals population)
      do (evaluate-individual individual config)))
+
+
+;;;
+;;; scaling functions
+;;; 
+
+(defun linear-scaling (max-size)
+  "Scales the raw fitness between 0 and 1."
+  #'(lambda (raw-fitness)
+      (/ raw-fitness max-size)))
