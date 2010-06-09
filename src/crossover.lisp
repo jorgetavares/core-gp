@@ -30,10 +30,12 @@
 	  (cross-chromossomes (chromossome genome1) (chromossome genome2) size)
 	(values (make-instance
 		 'individual 
-		 :id (generate-id) :genome (make-bit-genome o1 size))
+		 :id (generate-id) :genome (make-bit-genome o1 size)
+		 :fitness (make-fitness (fitness-type (evaluation config))))
 		(make-instance 
 		 'individual 
-		 :id (generate-id) :genome (make-bit-genome o2 size))))))
+		 :id (generate-id) :genome (make-bit-genome o2 size)
+		 :fitness (make-fitness (fitness-type (evaluation config))))))))
 
 (defmethod one-point-crossover ((genome1 integer-genome) (genome2 integer-genome) config)
   (let ((size (genome-size (population config))))
@@ -41,10 +43,12 @@
 	  (cross-chromossomes (chromossome genome1) (chromossome genome2) size)
 	(values (make-instance
 		 'individual 
-		 :id (generate-id) :genome (make-integer-genome o1 size))
+		 :id (generate-id) :genome (make-integer-genome o1 size)
+		 :fitness (make-fitness (fitness-type (evaluation config))))
 		(make-instance 
 		 'individual 
-		 :id (generate-id) :genome (make-integer-genome o2 size))))))
+		 :id (generate-id) :genome (make-integer-genome o2 size)
+		 :fitness (make-fitness (fitness-type (evaluation config))))))))
 
 (defun cross-chromossomes (c1 c2 size)
   (let ((cut-point (random size))
@@ -67,10 +71,12 @@
 	(uniform-cross-chromossomes (chromossome genome1) (chromossome genome2) size)
       (values (make-instance
 	       'individual 
-	       :id (generate-id) :genome (make-bit-genome o1 size))
+	       :id (generate-id) :genome (make-bit-genome o1 size)
+	       :fitness (make-fitness (fitness-type (evaluation config))))
 	      (make-instance 
 	       'individual 
-	       :id (generate-id) :genome (make-bit-genome o2 size))))))
+	       :id (generate-id) :genome (make-bit-genome o2 size)
+	       :fitness (make-fitness (fitness-type (evaluation config))))))))
  
 (defmethod uniform-crossover ((genome1 integer-genome) (genome2 integer-genome) config)
   (let ((size (genome-size (population config))))
@@ -78,10 +84,12 @@
 	(uniform-cross-chromossomes (chromossome genome1) (chromossome genome2) size)
       (values (make-instance
 	       'individual 
-	       :id (generate-id) :genome (make-integer-genome o1 size))
+	       :id (generate-id) :genome (make-integer-genome o1 size)
+	       :fitness (make-fitness (fitness-type (evaluation config))))
 	      (make-instance 
 	       'individual 
-	       :id (generate-id) :genome (make-integer-genome o2 size))))))
+	       :id (generate-id) :genome (make-integer-genome o2 size)
+	       :fitness (make-fitness (fitness-type (evaluation config))))))))
 
 (defun uniform-cross-chromossomes (c1 c2 size)
    (let ((o1 (copy-array c1))
@@ -103,10 +111,12 @@
 	(uniform-order-cross (chromossome genome1) (chromossome genome2) size)
       (values (make-instance
 	       'individual 
-	       :id (generate-id) :genome (make-permutation-genome o1 size))
+	       :id (generate-id) :genome (make-permutation-genome o1 size)
+	       :fitness (make-fitness (fitness-type (evaluation config))))
 	      (make-instance 
 	       'individual 
-	       :id (generate-id) :genome (make-permutation-genome o2 size))))))
+	       :id (generate-id) :genome (make-permutation-genome o2 size)
+	       :fitness (make-fitness (fitness-type (evaluation config))))))))
 
 (defun filter-genes (genes parent)
   (loop for gene across parent
@@ -163,12 +173,14 @@
 	     'individual 
 	     :id (generate-id)
 	     :genome (make-tree-genome
-		      (copy-tree o1) (max-tree-depth o1) (count-tree-nodes o1)))
+		      (copy-tree o1) (max-tree-depth o1) (count-tree-nodes o1))
+	     :fitness (make-fitness (fitness-type (evaluation config))))
 	    (make-instance 
 	     'individual 
 	     :id (generate-id)
 	     :genome (make-tree-genome
-		      (copy-tree o2) (max-tree-depth o2) (count-tree-nodes o2))))))
+		      (copy-tree o2) (max-tree-depth o2) (count-tree-nodes o2))
+	     :fitness (make-fitness (fitness-type (evaluation config)))))))
 
 (defun cross-subtrees (p1 p2 depth)
   "Exchanges two subtrees in a random point."

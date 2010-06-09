@@ -255,7 +255,12 @@
 ;; evaluation configuration
 
 (defclass evaluation-config ()
-  ((evaluation-function 
+  ((fitness-type
+    :initarg :fitness-type
+    :initform (error "evaluation-config: must provide a fitness type.")
+    :reader fitness-type
+    :documentation "The type of fitness (should default to 'fitness).")
+   (evaluation-function 
     :initarg :evaluation-function 
     :initform (error "evaluation-config: must provide an evaluation function.")
     :reader evaluation-function
@@ -274,8 +279,9 @@
       (setf (slot-value config 'scaling-p) t)
       (setf (slot-value config 'scaling-p) nil)))
 
-(defun make-evaluation-config (evaluation-function &optional scaling-function)
+(defun make-evaluation-config (fitness-type evaluation-function &optional scaling-function)
   "Return an evaluation configuration."
   (make-instance 'evaluation-config
+		 :fitness-type fitness-type
 		 :evaluation-function evaluation-function
 		 :scaling-function scaling-function))

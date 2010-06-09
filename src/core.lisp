@@ -21,7 +21,7 @@
 
 ;; GA generic start function
 (defun ga-generic (&key (pop-size) (genome-type 'bit-genome) (genome-size 10)
-		   (evaluation-fn nil) (scaling-fn nil)
+		   (fitness-type 'fitness) (evaluation-fn nil) (scaling-fn nil)
 		   (cx-operator #'one-point-crossover) (cx-rate 0.75)
 		   (mt-operator #'flip-mutation) (mt-rate 1.0) (mt-gene-rate 0.01)
 		   (selection '(tournament 3)) (replacement-mode :generational)
@@ -36,7 +36,7 @@
 					   :mt-operator mt-operator
 					   :mt-rate mt-rate
 					   :mt-gene-rate mt-gene-rate)
-		    (make-evaluation-config evaluation-fn scaling-fn)
+		    (make-evaluation-config fitness-type evaluation-fn scaling-fn)
 		    (make-selection-config (apply #'make-selection
 						  (first selection) (rest selection))
 					   replacement-mode elitism)
@@ -53,7 +53,7 @@
 (defun gp-generic (&key (pop-size) (fset-names nil) (tset-names nil)
 		   (size-type :depth) (initial-size 2) (maximum-size 5)
 		   (tree-generator #'ramped-half-and-half) 
-		   (evaluation-fn nil) (scaling-fn nil)
+		   (fitness-type 'fitness) (evaluation-fn nil) (scaling-fn nil)
 		   (cx-operator #'tree-crossover) (cx-rate 0.9)
 		   (mt-operator #'point-mutation) (mt-rate 0.1) (mt-gene-rate 0.01)
 		   (selection '(tournament 3)) (replacement-mode :steady-state)
@@ -69,7 +69,7 @@
 					   :mt-operator mt-operator
 					   :mt-rate mt-rate
 					   :mt-gene-rate mt-gene-rate)
-		    (make-evaluation-config evaluation-fn scaling-fn)
+		    (make-evaluation-config fitness-type evaluation-fn scaling-fn)
 		    (make-selection-config (apply #'make-selection
 						  (first selection) (rest selection))
 					   replacement-mode elitism)
@@ -133,7 +133,8 @@
 			      :initial-element (make-instance (stats-type extra-config)))))
       (reset-id)
       (setf population 
-	    (apply #'make-random-population (size population-config) genome-type args)) 
+	    (apply #'make-random-population 
+		    (fitness-type evaluation-config) (size population-config) genome-type args))
       (evaluate-population population evaluation-config)
       (multiple-value-bind (new-run-best flag)
 	  (compute-stats (aref stats 0) 1 population (aref (individuals population) 0)

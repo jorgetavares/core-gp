@@ -69,8 +69,8 @@
 		      :tset-names *tset*
 		      :initial-size 1
 		      :maximum-size 4
-		      :evaluation-fn (make-fitness-regression *fitness-cases* 
-							      *x-points* *y-points*)
+		      :evaluation-fn (make-fitness-regression 
+				      *fitness-cases* *x-points* *y-points*)
 		      :elitism nil
 		      :replacement-mode :steady-state
 		      :terminal-value generations))

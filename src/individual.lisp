@@ -19,7 +19,7 @@
     :accessor genome
     :documentation "Individual's genome (tree, permutation, etc).")
    (fitness
-    :initarg :fitness :initform (make-fitness)
+    :initarg :fitness :initform nil
     :accessor fitness
     :documentation "Individual's fitness value.")
    (eval-p
@@ -63,12 +63,13 @@
 ;;; individual builders
 ;;;
 
-(defun make-random-individual (id genome-type size &rest args)
+(defun make-random-individual (id fitness-type genome-type size &rest args)
   "Return a random individual of a specific defined genome."
   (make-instance 'individual
 		 :id id
 		 :genome (apply #'make-random-genome 
-				(make-empty-genome genome-type) size args)))
+				(make-empty-genome genome-type) size args)
+		 :fitness (make-fitness fitness-type)))
 
 ;;;
 ;;; genome definitions
@@ -150,11 +151,12 @@
 
 (defmethod make-random-genome ((new-genome bit-genome) size &rest args)
   (declare (ignore args))
-  (setf (chromossome new-genome)
+   (setf (chromossome new-genome)
 	(make-array size 
 		    :element-type 'bit
 		    :initial-contents (loop repeat size collect (random 2)))
-	(size new-genome) size) new-genome)
+	(size new-genome) size)
+   new-genome)
 
 (defmethod make-random-genome ((new-genome integer-genome) size &rest args)
   (destructuring-bind (min max) args
@@ -264,13 +266,13 @@
 		 :individuals individuals
 		 :size (if size size (length individuals))))
 
-(defun make-random-population (size genome-type genome-size &rest args)
+(defun make-random-population (fitness-type size genome-type genome-size &rest args)
   (make-population 
    :individuals
    (make-array size
 	       :initial-contents 
 	       (loop repeat size
 		  collect (apply #'make-random-individual
-				 (generate-id) genome-type genome-size args)))
+				 (generate-id) fitness-type genome-type genome-size args)))
    :size size))
 

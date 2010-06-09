@@ -22,15 +22,15 @@
 	    (funcall scaling-function (slot-value fitness 'raw-score))
 	    (slot-value fitness 'raw-score))))
 
-(defun make-fitness (&key raw-score scaling-function)
+(defun make-fitness (fitness-type &key raw-score scaling-function)
   "Create an empty of filled fitness."
   (if raw-score
       (if scaling-function
-	  (make-instance  'fitness
-			  :raw-score raw-score
-			  :scaling-function scaling-function)
-	  (make-instance 'fitness :raw-score raw-score))
-      (make-instance 'fitness)))
+	  (make-instance fitness-type
+			 :raw-score raw-score
+			 :scaling-function scaling-function)
+	  (make-instance fitness-type :raw-score raw-score))
+      (make-instance fitness-type)))
 
 (defmethod copy ((fitness fitness))
   (let ((copy (make-instance 'fitness :raw-score (raw-score fitness))))
