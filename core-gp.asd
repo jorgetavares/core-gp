@@ -37,6 +37,10 @@
 						       "src/evaluation"))
 	       (:file "src/output"        :depends-on ("src/package" 
 						       "src/stats"))
+	       (:file "src/strong-type"   :depends-on ("src/package" 
+						       "src/sets"
+						       "src/individual"
+						       "src/configuration"))
 	       (:file "src/core"          :depends-on ("src/package" 
 						       "src/sets" 
 						       "src/tree" 
@@ -49,5 +53,6 @@
 						       "src/mutation"
 						       "src/utilities"
 						       "src/stats"
-						       "src/output"))))
+						       "src/output"
+						       "src/strong-type"))))
 						    

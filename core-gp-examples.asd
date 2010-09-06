@@ -13,4 +13,5 @@
 	       (:file "examples/ninemax")
 	       (:file "examples/tsp")
                (:file "examples/regression")
-	       (:file "examples/sin-function")))
+	       (:file "examples/sin-function")
+	       (:file "examples/stgp")))

@@ -54,6 +54,7 @@
 	   #:reset-id
 	   #:ga-generic
 	   #:gp-generic
+	   #:stgp-generic
 	   #:open-output-streams
 	   #:run-core
 	   #:select-replacement-mode ;; replacement.lisp
@@ -151,6 +152,10 @@
 	   #:terminals
 	   #:functions-size
 	   #:terminals-size
+	   #:arity-table
+	   #:types-tree
+	   #:functions-types-table
+	   #:terminals-types-table
 	   #:make-sets-container
 	   #:make-set
 	   #:process-fset-arity
@@ -187,5 +192,35 @@
 	   #:gp-random-real
 	   #:gp-random-10
 	   #:gp-random-100
+	   #:*stgp-node-types* ;; strong-type.lisp
+	   #:defstnode
+	   #:defstnode-macro
+	   #:defstterm
+	   #:terminal
+	   #:value
+	   #:rtype
+	   #:make-sets-container-st
+	   #:process-fset-types
+	   #:ramped-half-and-half-st
+	   #:full-method-depth-st
+	   #:grow-method-depth-st
+	   #:grow-method-depth-st2
+	   #:process-terminal-st
+	   #:stgp-tree-mutation
+	   #:stgp-tree-crossover
+	   #:stgp-constant-reals
+	   #:stgp-constant-ints
+	   #:stgp-constant-booleans
+	   #:stgp-plus
+	   #:stgp-minus
+	   #:stgp-times
+	   #:stgp-if
+	   #:stgp-and
+	   #:stgp-or
+	   #:stgp-equal
+	   #:stgp-less
+	   #:stgp-greater
+	   #:stgp-prog2
+	   #:stgp-prog3
 	   ))
   

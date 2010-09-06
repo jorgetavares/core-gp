@@ -190,10 +190,8 @@
          (o2 (list (copy-tree p2))))
     (multiple-value-bind (p1-subtree p1-fragment)
         (get-subtree (first o1) o1 p1-point)
-      (multiple-value-bind
-            (p2-subtree p2-fragment)
-          (get-subtree
-           (first o2) o2 p2-point)
+      (multiple-value-bind (p2-subtree p2-fragment)
+          (get-subtree (first o2) o2 p2-point)
         (setf (first p1-subtree) p2-fragment)
         (setf (first p2-subtree) p1-fragment)))
     (validate-crossover p1 o1 p2 o2 depth)))
@@ -213,6 +211,21 @@
 		  (return (values new-point new-tree new-index))
 		  (setf index new-index))))
 	  (values nil nil index))))
+
+;(defun get-subtree (tree point index)
+;  "Return a subtree."
+;  (if (zerop index)
+;      (values point tree index)
+;      (if (consp tree)
+;	  (loop for args in (rest tree)
+;	     do (multiple-value-bind (new-point new-tree new-index)
+;		    (get-subtree (first args) args (1- index))
+;		  (if (zerop index)
+;		      (return (values new-point new-tree new-index))
+;		      (setf index new-index)))
+;	     finally (values nil nil index))
+;	  (values nil nil index))))
+
 
 (defun validate-crossover (p1 o1 p2 o2 depth)
   "Validates the offspring. If they pass the maximum depth they are rejected."

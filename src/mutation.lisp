@@ -1,7 +1,7 @@
 (in-package #:core-gp)
 
 ;;;
-;;; point mutation
+;;; mutation
 ;;;
 
 (defun apply-mutation (population config)
@@ -19,6 +19,10 @@
 ;;;
 ;;; GA operators
 ;;;
+
+;;
+;; Flip Mutation
+;;
 
 (defgeneric flip-mutation (genome config)
   (:documentation "Flip mutation operator."))
@@ -45,6 +49,10 @@
     genome))
 
 
+;;
+;; Swap Mutation
+;;
+
 (defgeneric swap-mutation (genome config)
   (:documentation "Swaps two genes."))
 
@@ -61,6 +69,10 @@
 ;;;
 ;;; GP operators
 ;;;
+
+;;
+;; Point Mutation
+;;
 
 (defgeneric point-mutation (genome config)
   (:documentation "Point mutation operator."))
@@ -94,3 +106,5 @@
   (if (< (random 1.0) rate)
       (operator (random-function-node sets arity))
       function))
+
+	 

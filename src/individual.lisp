@@ -142,8 +142,10 @@
   (:documentation "Generate a random genome of given type and size."))
     
 (defmethod make-random-genome ((new-genome tree-genome) size &rest args)
-  (destructuring-bind (builder fset fset-size tset tset-size) args
-    (let ((tree (funcall builder 0 size fset fset-size tset tset-size)))
+  (destructuring-bind (builder fset fset-size tset tset-size fset-types tset-types) args
+    (let ((tree (if (and fset-types tset-types) ;; STGP or GP
+		    (funcall builder 0 size fset fset-size tset tset-size fset-types tset-types)
+		    (funcall builder 0 size fset fset-size tset tset-size))))
       (setf (chromossome new-genome) tree
 	    (tree-depth new-genome) (max-tree-depth tree)
 	    (nodes-count new-genome) (count-tree-nodes tree))

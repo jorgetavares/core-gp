@@ -81,6 +81,40 @@
 				       :stats-type 'tree-stats))))
     (open-output-streams gp-config output id)))
 
+;; Strong-Type GP generic start function
+(defun stgp-generic (&key (pop-size) (fset-names nil) (tset-names nil) (types-tree nil)
+		     (size-type :depth) (initial-size 2) (maximum-size 5)
+		     (tree-generator #'ramped-half-and-half-st) 
+		     (fitness-type 'fitness) (evaluation-fn nil) (scaling-fn nil)
+		     (cx-operator #'stgp-tree-crossover) (cx-rate 0.9)
+		     (mt-operator #'stgp-tree-mutation) (mt-rate 0.1) (mt-gene-rate 0.1)
+		     (selection '(tournament 3)) (replacement-mode :steady-state)
+		     (terminal-condition :generations) (terminal-value 10) 
+		     (elitism nil) (stop nil) (optimum-solution nil)
+		     (id "stgp") (output :screen) (comparator #'<) (mutation-limit 2))
+  "Configure and start a STGP engine."
+  (let ((gp-config (make-core-config
+		    (make-tree-population-config pop-size size-type 
+						 initial-size maximum-size tree-generator)
+		    (make-operators-config :cx-operator cx-operator
+					   :cx-rate cx-rate
+					   :mt-operator mt-operator
+					   :mt-rate mt-rate
+					   :mt-gene-rate mt-gene-rate)
+		    (make-evaluation-config fitness-type evaluation-fn scaling-fn)
+		    (make-selection-config (apply #'make-selection
+						  (first selection) (rest selection))
+					   replacement-mode elitism)
+		    (make-terminal-config terminal-condition 
+					  terminal-value stop 
+					  optimum-solution)
+		    (make-extra-config :comparator comparator
+				       :upper-bound mutation-limit
+				       :sets (make-sets-container-st 
+					      fset-names tset-names types-tree)
+				       :stats-type 'tree-stats))))
+    (open-output-streams gp-config output id)))
+
 
 ;;
 ;; genric core
@@ -117,7 +151,9 @@
 		    (list (initial-size population-config) 
 			  (tree-generator population-config)
 			  (functions (sets extra-config)) (functions-size (sets extra-config))
-			  (terminals (sets extra-config)) (terminals-size (sets extra-config))))
+			  (terminals (sets extra-config)) (terminals-size (sets extra-config))
+			  (functions-types-table (sets extra-config)) 
+			  (terminals-types-table (sets extra-config))))
 		   (bit-genome
 		    (list (genome-size population-config)))
 		   (integer-genome

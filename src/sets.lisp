@@ -23,7 +23,48 @@
     :documentation "Number of elements in the Terminal Set.")
    (arity-table
     :reader arity-table
-    :documentation "Function Set organized by muber of arguments.")))
+    :documentation "Function Set organized by muber of arguments.")
+   (types-tree 
+    ;; TODO: should be a tree of types; now just list with all subtypes
+    ;;       easy to code process-fset-types but with duplications
+    :initarg :types-tree
+    :initform nil
+    :reader types-tree
+    :documentation "Tree struture that contains the types for Strong-Type GP nodes.")
+   (functions-types-table
+    :initarg :functions-types-table
+    :initform nil
+    :reader functions-types-table
+    :documentation "Function set organized by returning type.")
+   (terminals-types-table
+    :initarg :terminals-types-table
+    :initform nil
+    :reader terminals-types-table
+    :documentation "Terminal set organized by returning type.")
+   ))
+
+
+;;; TYPES DEFINITION
+
+;; TODO: process-fset-types should use a 
+;; structure like this in the future to avoid
+;; duplications and reflect the type structure
+
+;(defparameter *evoants-node-types* 
+;  '(:t (:none) 
+;       (:any (:number (:integer) (:real)) 
+;             (:boolean) 
+;             (:range) 
+;             (:ants))))
+
+;; quick hack for now... (just defined by the user? provide default types?)
+;(defparameter *evoants-node-types* 
+;  '(:none 
+;    (:any :number :integer :real :boolean :range :ants) 
+;    (:number :integer :real)
+;    :boolean 
+;    :range 
+;    :ants))
 
 
 ;;;
@@ -35,8 +76,15 @@
   (setf (slot-value container 'terminals-size)
 	(length (slot-value container 'terminals)))
   (setf (slot-value container 'arity-table)
-	(process-fset-arity (slot-value container 'functions))))
-  
+	(process-fset-arity (slot-value container 'functions)))
+  (when (slot-value container 'types-tree)
+    (setf (slot-value container 'functions-types-table)
+	  (process-fset-types (slot-value container 'types-tree)
+			      (slot-value container 'functions)))
+   (setf (slot-value container 'terminals-types-table)
+	  (process-fset-types (slot-value container 'types-tree)
+			      (slot-value container 'terminals)))))
+			      
 (defun make-sets-container (function-names terminal-names)
   "Return a container for the Function and Terminal Sets (nodes must be defined)."
   (make-instance 'sets-container
@@ -55,6 +103,7 @@
 	  (setf (gethash (arity node) arity-table) 
 		(push node nodes)))
      finally (return arity-table)))
+
 
 ;;
 ;; methods
@@ -80,7 +129,7 @@
   (:documentation "Find a random terminal."))
 
 (defmethod find-terminal-node (name (container sets-container))
-  (find name (slot-value container 'functions) 
+  (find name (slot-value container 'terminals) 
 	:test #'(lambda (element node)
 		  (eql element (operator node)))))
 
@@ -106,7 +155,7 @@
      (defclass ,node-name ()
        ((operator :initform ',node-name :reader operator)
 	,(if (zerop (length `,args))
-	     `(ephemeral :initform ,ephemeral :reader ephemeral)
+	     `(ephemeral :initform ,ephemeral       :reader ephemeral)
 	     `(arity     :initform ,(length `,args) :reader arity))
 	(string :initform ,string :reader string-form)))))
 
@@ -221,7 +270,7 @@
 
 (defnode gp-false (() (:string "false" :ephemeral t)) nil)
 
-;; random numbers
+;; random numbers - not ephemeral
 (defnode gp-random-real (() (:string "random-real" :ephemeral nil))
   (random 1.0))
 
