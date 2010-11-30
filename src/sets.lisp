@@ -41,6 +41,11 @@
     :initform nil
     :reader terminals-types-table
     :documentation "Terminal set organized by returning type.")
+   (subtypes-table
+    :initarg :subtypes-table
+    :initform nil
+    :reader subtypes-table
+    :documentation "Types and their subtypes.")
    ))
 
 
@@ -81,9 +86,11 @@
     (setf (slot-value container 'functions-types-table)
 	  (process-fset-types (slot-value container 'types-tree)
 			      (slot-value container 'functions)))
-   (setf (slot-value container 'terminals-types-table)
+    (setf (slot-value container 'terminals-types-table)
 	  (process-fset-types (slot-value container 'types-tree)
-			      (slot-value container 'terminals)))))
+			      (slot-value container 'terminals)))
+    (setf (slot-value container 'subtypes-table)
+	  (process-subtypes (slot-value container 'types-tree)))))
 			      
 (defun make-sets-container (function-names terminal-names)
   "Return a container for the Function and Terminal Sets (nodes must be defined)."
@@ -103,7 +110,6 @@
 	  (setf (gethash (arity node) arity-table) 
 		(push node nodes)))
      finally (return arity-table)))
-
 
 ;;
 ;; methods

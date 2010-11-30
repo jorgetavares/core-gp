@@ -156,6 +156,7 @@
 	   #:types-tree
 	   #:functions-types-table
 	   #:terminals-types-table
+	   #:subtypes-table
 	   #:make-sets-container
 	   #:make-set
 	   #:process-fset-arity
@@ -201,10 +202,12 @@
 	   #:rtype
 	   #:make-sets-container-st
 	   #:process-fset-types
+	   #:process-subtypes
+	   #:subtype-p
 	   #:ramped-half-and-half-st
 	   #:full-method-depth-st
 	   #:grow-method-depth-st
-	   #:grow-method-depth-st2
+	   #:init-method-strong-type
 	   #:process-terminal-st
 	   #:stgp-tree-mutation
 	   #:stgp-tree-crossover

@@ -5,10 +5,12 @@
 ;;;
 
 (defparameter *stgp-node-types* 
-  '(:none 
-    (:any :number :integer :real :boolean :none) 
+  '((:any :number :integer :real :boolean :none) 
     (:number :integer :real)
     :boolean 
+    :integer 
+    :real
+    :none
     ))
 
 
@@ -30,7 +32,8 @@
 	(string      :initform ,string          :reader string-form)))))
      
 
-(defmacro defstnode-macro (node-name ((&rest args) (&key (string "") (args-type nil))) 
+(defmacro defstnode-macro (node-name ((&rest args) 
+				      (&key (string "") (return-type nil) (args-type nil))) 
 		     &body code)
   "Define a macro node for a Strong-Type set."
   `(progn
@@ -39,7 +42,7 @@
        ((operator    :initform ',node-name      :reader operator)
 	(arity       :initform ,(length `,args) :reader arity)
 	(args-type   :initform ,args-type       :reader args-type)
-	(return-type :initform t                :reader return-type)
+	(return-type :initform ,return-type     :reader return-type)
 	(string      :initform ,string          :reader string-form)))))
      
 
@@ -62,10 +65,14 @@
   ((value :initarg :value :initform nil :reader value)
    (rtype :initarg :rtype :initform nil :reader rtype)))
 
+;(defmethod print-object ((object terminal) stream)
+;  (print-unreadable-object (object stream :type t)
+;    (with-slots (value rtype) object
+;      (format stream "~a ~a" value rtype)))) 
+
 (defmethod print-object ((object terminal) stream)
-  (print-unreadable-object (object stream :type t)
-    (with-slots (value rtype) object
-      (format stream "~a ~a" value rtype)))) 
+  (with-slots (value) object
+    (format stream "~a" value)))
 
 (defun make-sets-container-st (function-names terminal-names types-tree)
   "Return a container for the Function and Terminal Sets (nodes must be defined)."
@@ -91,6 +98,21 @@
 		      (setf (gethash main-type node-table)
 			    (append nodes (gethash subtype node-table)))))))
        finally (return node-table))))
+
+(defun process-subtypes (types)
+  "Return an hashtable that maps every type to its subtypes."
+  (loop with table = (make-hash-table) 
+     for subtypes in types
+     when (listp subtypes)
+     do (setf (gethash (first subtypes) table)
+	      (rest subtypes))
+     finally (return table)))
+  
+(defun subtype-p (subtype type sets)
+  "Check is the given subtype is a subtype of type."
+  (if (member subtype (gethash type (subtypes-table sets)))
+      t nil))
+
 
 ;;;
 ;;; tree generators and related functions
@@ -126,6 +148,7 @@
 	     
 (defun process-terminal-st (node)
   "Process the type of terminal."
+  ;(format t "~A~%" node)
   (if (ephemeral node)
       (let ((value (funcall (operator node))))
 	(make-instance 'terminal 
@@ -159,6 +182,34 @@
 				 (gethash use-type tset-type)))))
 	      (process-terminal-st terminal))))))
 
+(defun init-method-strong-type (size limit fset fset-size tset tset-size fset-type tset-type 
+				&optional (use-type nil))
+  (if (= size limit)
+      (let* ((valid-nodes (gethash use-type tset-type))
+	     (valid-size (length valid-nodes)))
+	(process-terminal-st (nth (random valid-size) valid-nodes)))
+      (let ((index (random (+ fset-size tset-size))))
+	(if (< index fset-size) 
+	    (let ((nodes (gethash use-type fset-type)))
+	      (if (and (null nodes) use-type)
+		  (let* ((valid-nodes (gethash use-type tset-type))
+			 (valid-size (length valid-nodes)))
+		    (process-terminal-st 
+		     (nth (random valid-size) valid-nodes)))
+		  (let ((function (if (null use-type)
+				      (nth index fset)
+				      (nth (random (length nodes)) nodes))))
+			    (cons (operator function)
+			  (loop  for type in (args-type function)
+			     collect (init-method-strong-type
+				      (1+ size) limit fset fset-size tset tset-size 
+				      fset-type tset-type type))))))
+	    (let ((terminal (if (null use-type)
+				(nth (- index fset-size) tset)
+				((lambda (nodes)
+				   (nth (random (length nodes)) nodes)) 
+				 (gethash use-type tset-type)))))
+	      (process-terminal-st terminal))))))
 
 ;;
 ;; STGP Tree Mutation
@@ -179,14 +230,16 @@
 (defun stgp-tree-mutate (tree rate sets type limit size)
   "STGP tree mutation: replaces a random subtree with a new random one."
   (if (< (random 1.0) rate)
-      (ramped-half-and-half-st 0 (- limit size)
-			       (functions sets) 
-			       (functions-size sets)
-			       (terminals sets) 
-			       (terminals-size sets)
-			       (functions-types-table sets) 
-			       (terminals-types-table sets)
-			       type)
+      ;(ramped-half-and-half-st 
+      (init-method-strong-type
+       0 (- limit size)
+       (functions sets) 
+       (functions-size sets)
+       (terminals sets) 
+       (terminals-size sets)
+       (functions-types-table sets) 
+       (terminals-types-table sets)
+       type)
       (if (and (consp tree)
 	       (rest tree))
 	  (let* ((node-name (first tree))
@@ -200,6 +253,54 @@
 		     collect (stgp-tree-mutate (nth arg tree) 
 					       rate sets arg-type limit (1+ size)))))
 	  tree)))
+
+;;
+;; Point Mutation
+;;
+
+(defgeneric stgp-point-mutation (genome config)
+  (:documentation "Point mutation operator."))
+	 
+(defmethod stgp-point-mutation ((genome tree-genome) config)
+  "Point mutation: for every node that can be mutated, changes to an equivalent type."
+  (setf (chromossome genome)
+	(stgp-point-mutate-tree (chromossome genome) 
+				(mt-gene-rate (operators config)) 
+				(sets (extra-configurations config))))
+  genome)
+
+(defun stgp-point-mutate-tree (tree rate sets)
+  "Point mutation: for every node that can be mutated, changes to an equivalent type."
+  (if (or (not (consp tree))
+	  (null (rest tree)))
+      (stgp-mutate-terminal tree rate sets)
+      (let* ((node-name (first tree))
+	     (node-arity (arity (find-function-node node-name sets))))
+	(cons (stgp-mutate-function node-name node-arity rate sets) 
+	      (loop for arg from 1 to node-arity
+		 collect (stgp-point-mutate-tree (nth arg tree) rate sets))))))
+
+
+(defun stgp-mutate-terminal (terminal rate sets)
+  (if (< (random 1.0) rate)
+      ;; 1. id o tipo do terminal
+      ;; 2. obtem os temrinais do mesmo tipo
+      ;; 3. escolhe um aleatorio
+      (process-terminal-st (random-terminal-node sets))
+      terminal))
+
+(defun stgp-mutate-function (function arity rate sets)
+  (if (< (random 1.0) rate)
+      ;; 1. obtem as funcoes com o mesmo numero de args
+      ;; 2. obtem o tipo de retorno e args da function
+      ;; 3. para as funcoes com a mesma aridade, filtra as
+      ;;    com os mesmos tipos
+      ;; 4. escolhe uma aleatoria das filtradas
+      (operator (random-function-node sets arity))
+      function))
+
+	 
+
 
 ;;
 ;; STGP Tree Crossover
@@ -232,6 +333,7 @@
   (let* ((p1-point (random (count-tree-nodes p1)))
 	 (o1 (list (copy-tree p1)))
          (o2 (list (copy-tree p2))))
+    ;(format t "====~%p1-point: ~A~% " p1-point)
     (multiple-value-bind (p1-subtree p1-fragment)
         (get-subtree-st (first o1) o1 p1-point)
       (let* ((node-name (if (listp p1-fragment) 
@@ -247,13 +349,22 @@
 	                                      ;; -- this needs to be redone...	    
 	     (p2-valid-points (get-valid-points p2 node-type sets))
 	     (total-valid-points (length p2-valid-points)))
+	;(format t "valid points: ~A node-type: ~A~%" p2-valid-points node-type)
 	(unless (zerop total-valid-points)
-	  (multiple-value-bind (p2-subtree p2-fragment)
-	      (get-subtree-st (first o2) o2 
-			      (nth (random total-valid-points) p2-valid-points))
-	    (setf (first p1-subtree) p2-fragment)
-	    (setf (first p2-subtree) p1-fragment)))))
-    (validate-crossover p1 o1 p2 o2 depth)))
+	  (let ((p2-point (nth (random total-valid-points) p2-valid-points)))
+	    ;(format t "p2-point: ~A~% " p2-point)
+	    (multiple-value-bind (p2-subtree p2-fragment)
+		(get-subtree-st (first o2) o2 p2-point)
+	      (setf (first p1-subtree) p2-fragment)
+	      (setf (first p2-subtree) p1-fragment))))))
+    (if (and (valid-typed-tree (first o1) sets)
+	     (valid-typed-tree (first o2) sets))
+	(validate-crossover p1 o1 p2 o2 depth)
+	(progn
+	  (format t "CX: invalid offsprings ~%o1: ~A~%o2: ~A~%" (first o1) (first o2))
+	  (format t "   with parents: ~%p1: ~A~%p2: ~A~%" p1 p2)
+	  (values p1 p2)))))
+
 
 (defun get-subtree-st (tree point index)
   "Return a subtree."
@@ -286,22 +397,103 @@
 
 (defun get-valid-points (parent node-type sets)
   "Return the positions of the nodes in the tree that satisfy node-type."
-  (let ((index 0))
+  (let ((index -1))
     (labels ((getpoints (tree)
 	       (unless (atom tree)
 		 (loop for arg in tree
-		    append (if (atom arg)
-			       (progn
-				 (setf index (1+ index))
-				 (when (eql node-type
-					    ((lambda (test) ;; TODO: change to aif macro
-					       (if test 
-						   test
-						   (find-terminal-node arg sets)))
-					     (find-function-node arg sets)))
-				   (list index)))
-			       (getpoints arg))))))
+		    append (cond ((atom arg)
+				  (let ((tree-type 
+					 (cond ((find-function-node arg sets)
+						(return-type
+						 (find-function-node arg sets)))
+					       ((find-terminal-node arg sets)
+						(return-type
+						 (find-terminal-node arg sets)))
+					       (t (rtype arg)))))
+				    (setf index (1+ index))
+				    (when (or (eql node-type tree-type)
+					      (and 
+					       (subtype-p tree-type node-type sets)
+					       (subtype-p node-type tree-type sets)))
+				      (list index))))
+				 (t (getpoints arg)))))))
       (getpoints parent))))
+
+(defun parse-tree-types (parent sets)
+  "Return the positions of the nodes in the tree that satisfy node-type."
+  (let ((index -1))
+    (labels ((getpoints (tree)
+	       (unless (atom tree)
+		 (loop for arg in tree
+		    collect (cond ((atom arg)
+				  (let ((tree-type 
+					 (cond ((find-function-node arg sets)
+						(return-type
+						 (find-function-node arg sets)))
+					       ((find-terminal-node arg sets)
+						(return-type
+						 (find-terminal-node arg sets)))
+					       (t (rtype arg)))))
+				    (setf index (1+ index))
+				    (list index tree-type)))
+				 (t (getpoints arg)))))))
+      (getpoints parent))))
+
+(defun same-type (tree sets type)
+  (let ((cmp-type
+	 (cond ((find-function-node tree sets)
+		(return-type
+		 (find-function-node tree sets)))
+	       ((find-terminal-node tree sets)
+		(return-type
+		 (find-terminal-node tree sets)))
+	       (t (rtype tree)))))
+    (if (or (eql cmp-type type)
+	    (subtype-p cmp-type type sets))
+	t 'false)))
+    
+(defun st-tree-validator (tree sets type)
+  "validates the types of a tree."
+  (cond 
+    ;; ephemeral terminal
+    ((atom tree)
+     (same-type tree sets type))
+    ;; non-ephemeral terminal
+    ((null (rest tree))
+     (same-type (first tree) sets type))
+    ;; function
+    (t (let* ((fname (first tree))
+	      (ftype (return-type (find-function-node fname sets)))
+	      (atypes (args-type (find-function-node fname sets))))
+	 (cons (if (or (eql ftype type)
+		       (subtype-p ftype type sets)) 
+		   t 'false)
+	       (loop for arg in (rest tree) and atype in atypes
+		  collect (st-tree-validator arg sets atype)))))))
+
+(defun flatten (list)
+  (cond ((null list) nil)
+	((atom list) (list list))
+	(t (append (flatten (first list))
+		  (flatten (rest list))))))
+
+
+(defun valid-typed-tree (tree sets)
+  (every #'(lambda (x)
+	     (eql x t)) (flatten
+			 (list (st-tree-validator tree sets :generic)))))
+
+(defun test-typed-tree (runs maxsize sets)
+  (every #'(lambda (x)
+	     (eql x t))
+	 (loop repeat runs 
+	    collect (core-gp::valid-typed-tree 
+		     (core-gp::init-method-strong-type 
+		      0 maxsize
+		      (functions sets) 10 (terminals sets) 10 
+		      (functions-types-table sets) (terminals-types-table sets) nil)
+		     sets))))
+
 
 
 ;;;
