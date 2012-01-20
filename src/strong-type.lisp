@@ -65,6 +65,10 @@
   ((value :initarg :value :initform nil :reader value)
    (rtype :initarg :rtype :initform nil :reader rtype)))
 
+(defun terminal-p (object)
+  (eql (type-of object) 'terminal))
+ 
+
 ;(defmethod print-object ((object terminal) stream)
 ;  (print-unreadable-object (object stream :type t)
 ;    (with-slots (value rtype) object

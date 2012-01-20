@@ -105,7 +105,13 @@
     :initarg :genome-type
     :initform (error "population-config: must provide a genome type.")
     :reader genome-type
-    :documentation "The genome type of the individuals.")))
+    :documentation "The genome type of the individuals.")
+   (builder
+    :initarg :builder
+    :initform #'make-random-population
+    :reader builder
+    :documentation "The builder type for the population.")
+   ))
 
 ;; for populations with linear genomes
 (defclass linear-population-config (population-config)
@@ -115,10 +121,11 @@
     :reader genome-size
     :documentation "Length of the individual's genome.")))
 
-(defun make-linear-population-config (size genome-type genome-size)
+(defun make-linear-population-config (size builder genome-type genome-size)
   "Return a population configuration."
   (make-instance 'linear-population-config
 		 :size size
+		 :builder builder
 		 :genome-type genome-type
 		 :genome-size genome-size))
 
@@ -142,10 +149,11 @@
     :reader tree-generator
     :documentation "Tree generator.")))
 
-(defun make-tree-population-config (pop-size tree-size-type initial maximum generator)
+(defun make-tree-population-config (pop-size builder tree-size-type initial maximum generator)
   "Return a tree population configuration."
   (make-instance 'tree-population-config
 		 :size pop-size
+		 :builder builder
 		 :genome-type 'tree-genome
 		 :tree-size-type tree-size-type
 		 :initial-size initial
@@ -265,6 +273,16 @@
     :initform (error "evaluation-config: must provide an evaluation function.")
     :reader evaluation-function
     :documentation "Evaluation function (required).")
+   (mapping-function 
+    :initarg :mapping-function 
+    :initform nil
+    :reader mapping-function
+    :documentation "Mapping function.")
+   (population-evaluator
+    :initarg :population-evaluator 
+    :initform (error "population-evaluator: must provide a population evaluator.")
+    :reader population-evaluator
+    :documentation "Evaluation function for the population (required).")
    (scaling-function 
     :initarg :scaling-function 
     :initform nil
@@ -279,9 +297,11 @@
       (setf (slot-value config 'scaling-p) t)
       (setf (slot-value config 'scaling-p) nil)))
 
-(defun make-evaluation-config (fitness-type evaluation-function &optional scaling-function)
+(defun make-evaluation-config (fitness-type evaluation-function population-evalutor &key (mapping-function nil) (scaling-function nil))
   "Return an evaluation configuration."
   (make-instance 'evaluation-config
 		 :fitness-type fitness-type
 		 :evaluation-function evaluation-function
+		 :mapping-function mapping-function
+		 :population-evaluator population-evalutor
 		 :scaling-function scaling-function))

@@ -68,7 +68,10 @@
   (:documentation "Evaluate a genome."))
 
 (defmethod evaluate-genome ((genome genome) (config evaluation-config))
-  (funcall (evaluation-function config) (chromossome genome)))
+  (if (mapping-function config)
+      (funcall (evaluation-function config) (funcall (mapping-function config) (chromossome genome)))
+      (funcall (evaluation-function config) (chromossome genome))))
+
 
 ;;
 ;; individual
@@ -89,9 +92,14 @@
   (:documentation "Evaluate a population."))
 
 (defmethod evaluate-population ((population population) (config evaluation-config))
-  (loop for individual across (individuals population)
-     do (evaluate-individual individual config)))
+  (funcall (population-evaluator config) population config))
 
+(defgeneric normal-evaluation (poplation config)
+  (:documentation "Standard pop evaluation."))
+
+(defmethod normal-evaluation ((population population) (config evaluation-config))
+  (loop for individual across (individuals population)
+	do (evaluate-individual individual config)))
 
 ;;;
 ;;; scaling functions

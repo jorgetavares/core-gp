@@ -71,6 +71,13 @@
 				(make-empty-genome genome-type) size args)
 		 :fitness (make-fitness fitness-type)))
 
+(defun make-individual (id fitness-type genome)
+  (make-instance 'individual
+		 :id id
+		 :genome genome
+		 :fitness (make-fitness fitness-type)))
+
+
 ;;;
 ;;; genome definitions
 ;;;
@@ -106,7 +113,6 @@
 (defclass permutation-genome (integer-genome)
   ())
 
-
 ;;;
 ;;; genome builders
 ;;;
@@ -134,7 +140,6 @@
   (make-instance 'permutation-genome
 		 :chromossome chromossome :size size))
 
-
 ;;
 ;; methods
 		 
@@ -154,10 +159,10 @@
 (defmethod make-random-genome ((new-genome bit-genome) size &rest args)
   (declare (ignore args))
    (setf (chromossome new-genome)
-	(make-array size 
-		    :element-type 'bit
-		    :initial-contents (loop repeat size collect (random 2)))
-	(size new-genome) size)
+	 (make-array size 
+		     :element-type 'bit
+		     :initial-contents (loop repeat size collect (random 2)))
+	 (size new-genome) size)
    new-genome)
 
 (defmethod make-random-genome ((new-genome integer-genome) size &rest args)
@@ -169,7 +174,7 @@
 					   collect (bound-random min max)))
 	  (size new-genome) size) new-genome))
 
-(defmethod make-random-genome ((new-genome integer-genome) size &rest args)
+(defmethod make-random-genome ((new-genome permutation-genome) size &rest args)
   (destructuring-bind (min max) args
     (setf (chromossome new-genome)
 	  (make-random-permutation
@@ -177,7 +182,7 @@
 		       :element-type 'fixnum
 		       :initial-contents (loop for n from min to max collect n)) size)
 	  (size new-genome) size) new-genome))
-
+  
 	
 ;;;
 ;;; methods
@@ -224,6 +229,7 @@
     (with-slots (chromossome tree-depth nodes-count) object
       (format stream "~a depth: ~a nodes-count: ~a" 
 	      chromossome tree-depth nodes-count)))) 
+
 
 ;;;
 ;;; population
@@ -274,7 +280,42 @@
    (make-array size
 	       :initial-contents 
 	       (loop repeat size
-		  collect (apply #'make-random-individual
-				 (generate-id) fitness-type genome-type genome-size args)))
+		     collect (apply #'make-random-individual
+				    (generate-id) fitness-type genome-type genome-size args)))
    :size size))
+
+(defun make-seed-population (seed-genome operator config)
+  (flet ((make-seed-genome ()
+	   (let ((new-genome (copy seed-genome)))
+	     (funcall operator new-genome config))))
+    #'(lambda (fitness-type size genome-type genome-size &rest args)
+	(declare (ignore genome-type genome-size args))
+	(make-population
+	 :individuals
+	 (make-array size
+		     :initial-contents
+		     (loop repeat size 
+			   collect (make-individual (generate-id) fitness-type (make-seed-genome))))
+	 :size size))))
+
+;; creates a "dummy" config object for the mutation operator with
+;; new mutation rates to be used for hyper-mutation 
+;; FIXME: this needs to be radically changed!!!
+(defun make-stgp-seed-config (mt-operator mt-gene-rate mutation-limit 
+			      fset-names tset-names types-tree)
+  (make-core-config 
+   nil
+   (make-operators-config :mt-operator mt-operator
+			  :mt-gene-rate mt-gene-rate)
+   nil
+   nil
+   nil
+   (make-extra-config :upper-bound mutation-limit
+		      :sets (make-sets-container-st 
+			     fset-names tset-names types-tree))))
+  
+  
+
+
+
 

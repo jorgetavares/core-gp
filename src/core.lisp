@@ -20,23 +20,26 @@
 ;;;
 
 ;; GA generic start function
-(defun ga-generic (&key (pop-size) (genome-type 'bit-genome) (genome-size 10)
+(defun ga-generic (&key (pop-size) (pop-builder #'make-random-population) 
+		   (genome-type 'bit-genome) (genome-size 10)
 		   (fitness-type 'fitness) (evaluation-fn nil) (scaling-fn nil)
 		   (cx-operator #'one-point-crossover) (cx-rate 0.75)
 		   (mt-operator #'flip-mutation) (mt-rate 1.0) (mt-gene-rate 0.01)
 		   (selection '(tournament 3)) (replacement-mode :generational)
 		   (terminal-condition :generations) (terminal-value 10) 
 		   (elitism t) (stop nil) (optimum-solution nil)
-		   (id "ga") (output :screen) (comparator #'<) (lower 0) (upper 9))
+		   (id "ga") (output :screen) (comparator #'<) (lower 0) (upper 9) (mapping-fn nil))
   "Configure and start a GA engine."
   (let ((ga-config (make-core-config
-		    (make-linear-population-config pop-size genome-type genome-size)
+		    (make-linear-population-config pop-size pop-builder genome-type genome-size)
 		    (make-operators-config :cx-operator cx-operator
 					   :cx-rate cx-rate
 					   :mt-operator mt-operator
 					   :mt-rate mt-rate
 					   :mt-gene-rate mt-gene-rate)
-		    (make-evaluation-config fitness-type evaluation-fn scaling-fn)
+		    (make-evaluation-config fitness-type evaluation-fn #'normal-evaluation 
+					    :mapping-function mapping-fn
+					    :scaling-function scaling-fn)
 		    (make-selection-config (apply #'make-selection
 						  (first selection) (rest selection))
 					   replacement-mode elitism)
@@ -50,7 +53,8 @@
     (open-output-streams ga-config output id)))
 
 ;; GP generic start function
-(defun gp-generic (&key (pop-size) (fset-names nil) (tset-names nil)
+(defun gp-generic (&key (pop-size) (pop-builder #'make-random-population) 
+		   (fset-names nil) (tset-names nil)
 		   (size-type :depth) (initial-size 2) (maximum-size 5)
 		   (tree-generator #'ramped-half-and-half) 
 		   (fitness-type 'fitness) (evaluation-fn nil) (scaling-fn nil)
@@ -62,14 +66,15 @@
 		   (id "gp") (output :screen) (comparator #'<))
   "Configure and start a GP engine."
   (let ((gp-config (make-core-config
-		    (make-tree-population-config pop-size size-type 
+		    (make-tree-population-config pop-size pop-builder size-type 
 						 initial-size maximum-size tree-generator)
 		    (make-operators-config :cx-operator cx-operator
 					   :cx-rate cx-rate
 					   :mt-operator mt-operator
 					   :mt-rate mt-rate
 					   :mt-gene-rate mt-gene-rate)
-		    (make-evaluation-config fitness-type evaluation-fn scaling-fn)
+		    (make-evaluation-config fitness-type evaluation-fn #'normal-evaluation 
+					    :scaling-function scaling-fn)
 		    (make-selection-config (apply #'make-selection
 						  (first selection) (rest selection))
 					   replacement-mode elitism)
@@ -82,7 +87,8 @@
     (open-output-streams gp-config output id)))
 
 ;; Strong-Type GP generic start function
-(defun stgp-generic (&key (pop-size) (fset-names nil) (tset-names nil) (types-tree nil)
+(defun stgp-generic (&key (pop-size) (pop-builder #'make-random-population) 
+		     (fset-names nil) (tset-names nil) (types-tree nil)
 		     (size-type :depth) (initial-size 2) (maximum-size 5)
 		     (tree-generator #'ramped-half-and-half-st) 
 		     (fitness-type 'fitness) (evaluation-fn nil) (scaling-fn nil)
@@ -91,17 +97,19 @@
 		     (selection '(tournament 3)) (replacement-mode :steady-state)
 		     (terminal-condition :generations) (terminal-value 10) 
 		     (elitism nil) (stop nil) (optimum-solution nil)
-		     (id "stgp") (output :screen) (comparator #'<) (mutation-limit 2))
+		     (id "stgp") (output :screen) (comparator #'<) (mutation-limit 2)
+		     (stats-type 'tree-stats) (pop-evaluator #'normal-evaluation))
   "Configure and start a STGP engine."
   (let ((gp-config (make-core-config
-		    (make-tree-population-config pop-size size-type 
+		    (make-tree-population-config pop-size pop-builder size-type 
 						 initial-size maximum-size tree-generator)
 		    (make-operators-config :cx-operator cx-operator
 					   :cx-rate cx-rate
 					   :mt-operator mt-operator
 					   :mt-rate mt-rate
 					   :mt-gene-rate mt-gene-rate)
-		    (make-evaluation-config fitness-type evaluation-fn scaling-fn)
+		    (make-evaluation-config fitness-type evaluation-fn pop-evaluator 
+					    :scaling-function scaling-fn)
 		    (make-selection-config (apply #'make-selection
 						  (first selection) (rest selection))
 					   replacement-mode elitism)
@@ -112,12 +120,44 @@
 				       :upper-bound mutation-limit
 				       :sets (make-sets-container-st 
 					      fset-names tset-names types-tree)
-				       :stats-type 'tree-stats))))
+				       :stats-type stats-type))))
     (open-output-streams gp-config output id)))
 
+;; GE generic start function
+(defun ge-generic (&key (pop-size) (pop-builder #'make-random-population) (genome-size 30)
+		   (fitness-type 'fitness) (evaluation-fn nil) (scaling-fn nil)
+		   (cx-operator #'one-point-crossover) (cx-rate 0.75)
+		   (mt-operator #'flip-mutation) (mt-rate 1.0) (mt-gene-rate 0.01)
+		   (selection '(tournament 3)) (replacement-mode :generational)
+		   (terminal-condition :generations) (terminal-value 10) 
+		   (elitism t) (stop nil) (optimum-solution nil)
+		   (id "ge") (output :screen) (comparator #'<)
+		   (mapping-fn #'map-ge) (grammar nil) (wrap t))
+  "Configure and start a GE engine."
+  (let ((ge-config (make-core-config
+		    (make-linear-population-config pop-size pop-builder 'ge-genome genome-size)
+		    (make-operators-config :cx-operator cx-operator
+					   :cx-rate cx-rate
+					   :mt-operator mt-operator
+					   :mt-rate mt-rate
+					   :mt-gene-rate mt-gene-rate)
+		    (make-evaluation-config fitness-type evaluation-fn #'normal-evaluation 
+					    :mapping-function (make-map-ge mapping-fn grammar wrap)
+					    :scaling-function scaling-fn)
+		    (make-selection-config (apply #'make-selection
+						  (first selection) (rest selection))
+					   replacement-mode elitism)
+		    (make-terminal-config terminal-condition 
+					  terminal-value stop 
+					  optimum-solution)
+		    (make-extra-config :comparator comparator 
+				       :stats-type 'fitness-stats
+				       :lower-bound 0
+				       :upper-bound 255))))
+    (open-output-streams ge-config output id)))
 
 ;;
-;; genric core
+;; generic core
 
 (defun open-output-streams (config output id)
   (if (member output '(:files :screen+files))
@@ -135,6 +175,7 @@
 	(terminal-config (terminal-condition config))
 	(extra-config (extra-configurations config)))
     (let* ((genome-type (genome-type population-config))
+	   (builder (builder population-config))
 	   (replacement-mode (select-replacement-mode 
 			      (replacement selection-config)))
    	   (comparator (comparator (extra-configurations config)))
@@ -164,13 +205,16 @@
 		    (list (genome-size population-config)
 			  (lower-bound extra-config)
 			  (upper-bound extra-config)))
+		   (ge-genome
+		    (list (genome-size population-config)
+			  (lower-bound extra-config)
+			  (upper-bound extra-config)))
 		   (otherwise (error "run-core: no valid genome-type."))))
 	   (stats (make-array total-generations 
 			      :initial-element (make-instance (stats-type extra-config)))))
       (reset-id)
       (setf population 
-	    (apply #'make-random-population 
-		    (fitness-type evaluation-config) (size population-config) genome-type args))
+	    (apply builder (fitness-type evaluation-config) (size population-config) genome-type args))
       (evaluate-population population evaluation-config)
       (multiple-value-bind (new-run-best flag)
 	  (compute-stats (aref stats 0) 1 population (aref (individuals population) 0)

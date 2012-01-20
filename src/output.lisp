@@ -47,3 +47,23 @@
 	      (mean-depth stats) (deviation-depth stats)
 	      (run-best-nodes-count stats) (best-nodes-count stats) (worst-nodes-count stats)
 	      (mean-nodes-count stats) (deviation-nodes-count stats)))))
+
+(defmethod output-stats ((stats extra-tree-stats) run-best new-best-p output streams)
+  "Outputs the computed stats according to the type of output." 
+  (unless (eql output :none)
+    (call-next-method)
+    (flet ((iterate-ht (table)
+	     (loop for key being the hash-keys of table
+		using (hash-value value)
+		collect (list key value))))
+      (when (member output '(:screen :screen+files))
+	(format t "pop: ~a ~%best: ~a ~%run-best: ~a ~%"
+		(iterate-ht (sets-pop-counter stats))
+		(iterate-ht (sets-best-counter stats))
+		(iterate-ht (sets-run-best-counter stats))))
+      (when (member output '(:files :screen+files))
+	(format (first streams) "pop: ~a ~%best: ~a ~%run-best: ~a ~%"
+		(iterate-ht (sets-pop-counter stats))
+		(iterate-ht (sets-best-counter stats))
+		(iterate-ht (sets-run-best-counter stats)))))))
+

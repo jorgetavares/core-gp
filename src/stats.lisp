@@ -183,7 +183,7 @@
 
 (defmethod compute-stats ((stats tree-stats) iteration population 
 			  run-best new-best-p comparator)
-  "Compute for the given iteration the fitness+stree stats."
+  "Compute for the given iteration the fitness+tree stats."
   (multiple-value-bind (run-best new-best-p)
       (call-next-method)
     (let* ((size (size population)) 
@@ -215,5 +215,57 @@
 
 
 ;;;
-;;; algorithm stats
+;;; extra structural stats
 ;;;
+
+(defclass extra-tree-stats (tree-stats)
+  ((sets-pop-counter
+    :initarg :sets-pop-counter :initform nil
+    :accessor sets-pop-counter
+    :documentation "Counter for every function/terminal present in the current population.")
+   (sets-best-counter
+    :initarg :sets-best-counter :initform nil
+    :accessor sets-best-counter
+    :documentation "Counter for every function/terminal present in the best tree.")
+   (sets-run-best-counter
+    :initarg :sets-run-best-counter :initform nil
+    :accessor sets-run-best-counter
+    :documentation "Counter for every function/terminal present in the run best tree.")
+   ))
+
+;;
+;; methods
+
+(defun count-element (element counter)
+  (if (terminal-p element)
+      (let* ((type (rtype element))
+	     (count (gethash type counter)))
+	(if count 
+	    (setf (gethash type counter) (1+ count))
+	    (setf (gethash type counter) 1)))
+      (let ((count (gethash element counter)))
+	(if count 
+	    (setf (gethash element counter) (1+ count))
+	    (setf (gethash element counter) 1)))))
+
+(defmethod compute-stats ((stats extra-tree-stats) iteration population 
+			  run-best new-best-p comparator)
+  "Compute for the given iteration the fitness+extra+tree stats."
+  (multiple-value-bind (run-best new-best-p)
+      (call-next-method)
+    (let ((best (aref (individuals population) 0))
+	  (pop-counter (make-hash-table))
+	  (best-counter (make-hash-table))
+	  (run-best-counter (make-hash-table)))
+      (loop for individual across (individuals population)
+	 do (loop for element in (flatten (chromossome (genome individual)))
+	       do (count-element element pop-counter)))
+      (loop for element in (flatten (chromossome (genome best)))
+	   do (count-element element best-counter))
+      (loop for element in (flatten (chromossome (genome run-best)))
+	 do (count-element element run-best-counter))
+      (setf (sets-pop-counter stats) pop-counter
+	    (sets-best-counter stats) best-counter
+	    (sets-run-best-counter stats) run-best-counter)
+      (values run-best new-best-p))))
+

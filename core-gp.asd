@@ -41,6 +41,10 @@
 						       "src/sets"
 						       "src/individual"
 						       "src/configuration"))
+	       (:file "src/ge"            :depends-on ("src/package" 
+						       "src/sets"
+						       "src/individual"
+						       "src/configuration"))
 	       (:file "src/core"          :depends-on ("src/package" 
 						       "src/sets" 
 						       "src/tree" 

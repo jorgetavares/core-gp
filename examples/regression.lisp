@@ -74,4 +74,3 @@
 		      :elitism nil
 		      :replacement-mode :steady-state
 		      :terminal-value generations))
-		      

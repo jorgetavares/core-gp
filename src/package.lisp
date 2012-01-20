@@ -19,6 +19,7 @@
 	   #:size
 	   #:genome-type
 	   #:genome-size
+	   #:builder
 	   #:make-linear-population-config
 	   #:tree-population-config
 	   #:tree-size-type
@@ -46,6 +47,8 @@
 	   #:make-terminal-config
 	   #:evaluation-config
 	   #:evaluation-function
+	   #:mapping-function
+	   #:population-evaluator
 	   #:scaling-function
 	   #:scaling-p
 	   #:make-evaluation-config
@@ -55,6 +58,7 @@
 	   #:ga-generic
 	   #:gp-generic
 	   #:stgp-generic
+	   #:ge-generic
 	   #:open-output-streams
 	   #:run-core
 	   #:select-replacement-mode ;; replacement.lisp
@@ -74,6 +78,7 @@
 	   #:evaluate-genome
 	   #:evaluate-individual
 	   #:evaluate-population
+	   #:normal-evaluation
 	   #:linear-scaling
 	   #:individual ;; individual.lisp
 	   #:id
@@ -82,6 +87,8 @@
 	   #:eval-p
 	   #:clone
 	   #:make-random-individual
+	   #:make-seed-population
+	   #:MAKE-STGP-SEED-CONFIG
 	   #:genome
 	   #:chromossome
 	   #:tree-genome
@@ -147,6 +154,10 @@
 	   #:best-nodes-count
 	   #:worst-depth
 	   #:worst-nodes-count
+	   #:extra-tree-stats
+	   #:sets-pop-counter
+	   #:sets-best-counter
+	   #:sets-run-best-counter
 	   #:sets-container ;; sets.lisp
 	   #:functions
 	   #:terminals
@@ -198,6 +209,7 @@
 	   #:defstnode-macro
 	   #:defstterm
 	   #:terminal
+	   #:terminal-p
 	   #:value
 	   #:rtype
 	   #:make-sets-container-st
@@ -225,5 +237,13 @@
 	   #:stgp-greater
 	   #:stgp-prog2
 	   #:stgp-prog3
+	   #:make-map-ge ;; ge.lisp
+	   #:map-ge
+	   #:map-tree-ge
+	   #:random-map-ge
+	   #:set-grammar
+	   #:run-map-ge
+	   #:ge-genome
+	   #:make-ge-genome
 	   ))
   

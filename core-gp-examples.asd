@@ -14,4 +14,5 @@
 	       (:file "examples/tsp")
                (:file "examples/regression")
 	       (:file "examples/sin-function")
-	       (:file "examples/stgp")))
+	       (:file "examples/stgp")
+	       (:file "examples/ge-hello-world")))
