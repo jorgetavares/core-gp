@@ -36,14 +36,6 @@
 (defun out-char (char)
   (list char))
 
-;(defparameter *simple-hello-world*
-;  '((<string>   -> <letter> (<letter> <string>))
-;    (<letter>   -> <vowel> <consoant> <space>)
-;    (<space>    -> #\Space)
-;    (<vowel>    -> #\a #\e #\i #\o #\i)
-;    (<consoant> -> #\b #\c #\d #\f #\g #\h #\j #\k #\l #\m #\n #\p #\q #\r #\s #\t #\v #\w #\x #\y #\z)))
-
-;(defun join (letter )
 
 ;;;
 ;;; fitness function 
