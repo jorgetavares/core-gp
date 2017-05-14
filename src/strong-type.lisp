@@ -69,11 +69,6 @@
   (eql (type-of object) 'terminal))
  
 
-;(defmethod print-object ((object terminal) stream)
-;  (print-unreadable-object (object stream :type t)
-;    (with-slots (value rtype) object
-;      (format stream "~a ~a" value rtype)))) 
-
 (defmethod print-object ((object terminal) stream)
   (with-slots (value) object
     (format stream "~a" value)))
@@ -152,7 +147,6 @@
 	     
 (defun process-terminal-st (node)
   "Process the type of terminal."
-  ;(format t "~A~%" node)
   (if (ephemeral node)
       (let ((value (funcall (operator node))))
 	(make-instance 'terminal 
@@ -234,7 +228,6 @@
 (defun stgp-tree-mutate (tree rate sets type limit size)
   "STGP tree mutation: replaces a random subtree with a new random one."
   (if (< (random 1.0) rate)
-      ;(ramped-half-and-half-st 
       (init-method-strong-type
        0 (- limit size)
        (functions sets) 
@@ -287,19 +280,19 @@
 
 (defun stgp-mutate-terminal (terminal rate sets)
   (if (< (random 1.0) rate)
-      ;; 1. id o tipo do terminal
-      ;; 2. obtem os temrinais do mesmo tipo
-      ;; 3. escolhe um aleatorio
+      ;; 1. id the terminal type
+      ;; 2. get terminals of the same type
+      ;; 3. pick one randomly
       (process-terminal-st (random-terminal-node sets))
       terminal))
 
 (defun stgp-mutate-function (function arity rate sets)
   (if (< (random 1.0) rate)
-      ;; 1. obtem as funcoes com o mesmo numero de args
-      ;; 2. obtem o tipo de retorno e args da function
-      ;; 3. para as funcoes com a mesma aridade, filtra as
-      ;;    com os mesmos tipos
-      ;; 4. escolhe uma aleatoria das filtradas
+      ;; 1. get the functions with the same arity
+      ;; 2. get the return type and the args types
+      ;; 3. for functions with the same arity,
+      ;;    filter the ones with the same types
+      ;; 4. pick one randomly
       (operator (random-function-node sets arity))
       function))
 
@@ -337,7 +330,6 @@
   (let* ((p1-point (random (count-tree-nodes p1)))
 	 (o1 (list (copy-tree p1)))
          (o2 (list (copy-tree p2))))
-    ;(format t "====~%p1-point: ~A~% " p1-point)
     (multiple-value-bind (p1-subtree p1-fragment)
         (get-subtree-st (first o1) o1 p1-point)
       (let* ((node-name (if (listp p1-fragment) 
@@ -353,10 +345,8 @@
 	                                      ;; -- this needs to be redone...	    
 	     (p2-valid-points (get-valid-points p2 node-type sets))
 	     (total-valid-points (length p2-valid-points)))
-	;(format t "valid points: ~A node-type: ~A~%" p2-valid-points node-type)
 	(unless (zerop total-valid-points)
 	  (let ((p2-point (nth (random total-valid-points) p2-valid-points)))
-	    ;(format t "p2-point: ~A~% " p2-point)
 	    (multiple-value-bind (p2-subtree p2-fragment)
 		(get-subtree-st (first o2) o2 p2-point)
 	      (setf (first p1-subtree) p2-fragment)
@@ -385,19 +375,6 @@
 		 (return (values new-point new-tree new-index))
 		 (setf index new-index))))
 	 (values nil nil index))))
-
-;(defun get-subtree-st (tree point index)
-;  (if (zerop index)
-;      (values point tree index)
-;      (if (consp tree)
-;	  (loop for args in (rest tree)
-;	     do (multiple-value-bind (new-point new-tree new-index)
-;		    (get-subtree-st (first args) args (1- index))
-;		  (if (zerop index)
-;		      (return (values new-point new-tree new-index))
-;		      (setf index new-index)))
-;	     finally (values nil nil index))
-;	  (values nil nil index))))
 
 (defun get-valid-points (parent node-type sets)
   "Return the positions of the nodes in the tree that satisfy node-type."
