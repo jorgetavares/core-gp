@@ -78,7 +78,6 @@
 			 (6 C) (7 C) (8 C) (9 C)
 			 (10 D)))
 
-;; '( 2 + 1 )
 
 (defun filter-tree (tree)
   (if (atom tree)
@@ -108,7 +107,7 @@
 		     (t 0))))))
 
 ;;;
-;;; run GP
+;;; run STGP
 ;;;
 
 (defun stgp-example (&key (id "stgp-example") (output :screen) (pop-size 1000) (generations 20))
@@ -128,9 +127,6 @@
 			:replacement-mode :generational
 			:terminal-value generations
 			:comparator #'>))
-		      
-;(defparameter *sets* (make-sets-container-st *fset* *tset* *stgp-node-types*))
-;(full-method-depth-st 0 4 (functions *sets*) 8 (terminals *sets*) 6 (functions-types-table *sets*) (terminals-types-table *sets*) nil)
 
 
 
