@@ -212,21 +212,6 @@
 		  (setf index new-index))))
 	  (values nil nil index))))
 
-;(defun get-subtree (tree point index)
-;  "Return a subtree."
-;  (if (zerop index)
-;      (values point tree index)
-;      (if (consp tree)
-;	  (loop for args in (rest tree)
-;	     do (multiple-value-bind (new-point new-tree new-index)
-;		    (get-subtree (first args) args (1- index))
-;		  (if (zerop index)
-;		      (return (values new-point new-tree new-index))
-;		      (setf index new-index)))
-;	     finally (values nil nil index))
-;	  (values nil nil index))))
-
-
 (defun validate-crossover (p1 o1 p2 o2 depth)
   "Validates the offspring. If they pass the maximum depth they are rejected."
   (let ((p1-limit (max-tree-depth (first o1)))
